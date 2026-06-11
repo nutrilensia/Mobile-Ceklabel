@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "401508183407",
+    "project_id": "ceklabel",
+    "storage_bucket": "ceklabel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401508183407:android:1150a1b9516481967d0c9a",
+        "android_client_info": {
+          "package_name": "com.ceklabel.cek_label"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbpT9y3i0ZvF46JEgPr1L1cG9uagIYCX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
