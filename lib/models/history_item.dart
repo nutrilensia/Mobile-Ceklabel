@@ -3,7 +3,9 @@ class HistoryItem {
   final String productName;
   final String grade;
   final String gradeColor;
-  final int calories;
+  final double calories;
+  final double sugarG;
+  final double sodiumMg;
   final double confidence;
   final DateTime scannedAt;
 
@@ -13,6 +15,8 @@ class HistoryItem {
     required this.grade,
     required this.gradeColor,
     required this.calories,
+    required this.sugarG,
+    required this.sodiumMg,
     required this.confidence,
     required this.scannedAt,
   });
@@ -20,13 +24,15 @@ class HistoryItem {
   factory HistoryItem.fromJson(Map<String, dynamic> json) {
     final rawNutrition = json['rawNutrition'] as Map<String, dynamic>? ?? {};
     return HistoryItem(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       productName: json['productName']?.toString() ?? '',
       grade: json['nutriScore']?.toString() ?? '',
       gradeColor: json['nutriScoreColor']?.toString() ?? '#888888',
-      calories: (rawNutrition['calories'] ?? 0).toInt(),
+      calories: (rawNutrition['calories'] ?? 0).toDouble(),
+      sugarG: (rawNutrition['sugarG'] ?? 0).toDouble(),
+      sodiumMg: (rawNutrition['sodiumMg'] ?? 0).toDouble(),
       confidence: double.tryParse(json['aiConfidence']?.toString() ?? '0') ?? 0,
-      scannedAt: DateTime.tryParse(json['scannedAt']?.toString() ?? '') ?? DateTime.now(),
+      scannedAt: (DateTime.tryParse(json['scannedAt']?.toString() ?? '') ?? DateTime.now()).toLocal(),
     );
   }
 }

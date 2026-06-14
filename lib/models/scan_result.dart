@@ -1,4 +1,5 @@
 class ScanResult {
+  final String? id;
   final String productName;
   final String servingSize;
   final NutriScore nutriScore;
@@ -11,6 +12,7 @@ class ScanResult {
   final bool savedToHistory;
 
   ScanResult({
+    this.id,
     required this.productName,
     required this.servingSize,
     required this.nutriScore,
@@ -25,6 +27,7 @@ class ScanResult {
 
   factory ScanResult.fromJson(Map<String, dynamic> json) {
     return ScanResult(
+      id: json['id']?.toString() ?? json['scanId']?.toString(),
       productName: json['productName']?.toString() ?? '',
       servingSize: json['servingSize']?.toString() ?? '',
       nutriScore: NutriScore.fromJson(json['nutriScore'] ?? {}),
@@ -43,6 +46,7 @@ class ScanResult {
     final score = json['scoreDetails'] as Map<String, dynamic>? ?? {};
     final analogies = json['aiAnalogies'] as Map<String, dynamic>? ?? {};
     return ScanResult(
+      id: json['id']?.toString() ?? json['_id']?.toString(),
       productName: json['productName']?.toString() ?? '',
       servingSize: raw['servingSize']?.toString() ?? '',
       nutriScore: NutriScore(

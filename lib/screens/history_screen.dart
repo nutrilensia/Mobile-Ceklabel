@@ -108,15 +108,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  static const _months = [
+    '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+  ];
+
   String _formatDate(DateTime dt) {
     final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Baru saja';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-    if (diff.inDays == 1) return 'Kemarin';
-    if (diff.inDays < 7) return '${diff.inDays} hari lalu';
-    return '${dt.day}/${dt.month}/${dt.year}';
+    final today = DateTime(now.year, now.month, now.day);
+    final dtDay = DateTime(dt.year, dt.month, dt.day);
+    final dayDiff = today.difference(dtDay).inDays;
+
+    if (dayDiff == 0) {
+      final mins = now.difference(dt).inMinutes;
+      if (mins < 1) return 'Baru saja';
+      if (mins < 60) return '$mins mnt lalu';
+      return '${now.difference(dt).inHours} jam lalu';
+    }
+    if (dayDiff == 1) return 'Kemarin';
+    return '${dt.day} ${_months[dt.month]} ${dt.year}';
   }
 
   @override
@@ -133,6 +143,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
             expandedHeight: 100,
             pinned: true,
             automaticallyImplyLeading: false,
+            titleTextStyle: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white,
+            ),
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
               title: Column(
@@ -223,7 +236,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.white24),
             const SizedBox(height: 16),
             Text('Gagal memuat riwayat', style: GoogleFonts.poppins(
-              fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white54,
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white54,
             )),
             const SizedBox(height: 8),
             Text(message, style: GoogleFonts.inter(fontSize: 12, color: Colors.white30),
@@ -304,7 +317,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const Icon(Icons.local_fire_department_rounded,
                             size: 13, color: Colors.white38),
                         const SizedBox(width: 3),
-                        Text('${item.calories} kkal',
+                        Text('${item.calories.round()} kkal',
                           style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
                         const SizedBox(width: 10),
                         const Icon(Icons.access_time_rounded, size: 13, color: Colors.white24),

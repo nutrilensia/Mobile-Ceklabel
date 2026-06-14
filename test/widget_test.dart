@@ -10,6 +10,6 @@ import 'package:cek_label/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const CekLabelApp());
+    await tester.pumpWidget(const CekLabelApp(showOnboarding: false));
   });
 }

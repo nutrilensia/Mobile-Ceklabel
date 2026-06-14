@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
+import '../models/family_profile.dart';
+import '../services/auth_service.dart';
 import '../widgets/nutri_score_badge.dart';
 import '../widgets/nutrition_card.dart';
 import '../widgets/score_breakdown.dart';
 import '../widgets/analogy_card.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   final ScanResult result;
+  final FamilyProfile? forProfile;
 
-  const ResultScreen({super.key, required this.result});
+  const ResultScreen({super.key, required this.result, this.forProfile});
 
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
   Color get _nutriColor {
     try {
-      return Color(int.parse(result.nutriScore.color.replaceFirst('#', '0xFF')));
+      return Color(int.parse(widget.result.nutriScore.color.replaceFirst('#', '0xFF')));
     } catch (_) {
       return Colors.grey;
     }
@@ -79,7 +87,7 @@ class ResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${(result.confidence * 100).toInt()}%',
+                      '${(widget.result.confidence * 100).toInt()}%',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -99,14 +107,20 @@ class ResultScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 // Product header
                 _buildProductHeader(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // For-profile section (if a family member was selected)
+                if (widget.forProfile != null) ...[
+                  _buildForProfileSection(widget.forProfile!),
+                  const SizedBox(height: 16),
+                ],
 
                 // Nutri-Score
                 NutriScoreBadge(
-                  grade: result.nutriScore.grade,
-                  label: result.nutriScore.label,
-                  colorHex: result.nutriScore.color,
-                  finalScore: result.nutriScore.finalScore,
+                  grade: widget.result.nutriScore.grade,
+                  label: widget.result.nutriScore.label,
+                  colorHex: widget.result.nutriScore.color,
+                  finalScore: widget.result.nutriScore.finalScore,
                 ),
                 const SizedBox(height: 24),
 
@@ -115,21 +129,27 @@ class ResultScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Analogies
-                AnalogyCard(analogies: result.analogies),
+                AnalogyCard(analogies: widget.result.analogies),
                 const SizedBox(height: 24),
 
                 // Nutrition facts
-                NutritionCard(nutrition: result.nutrition),
+                NutritionCard(nutrition: widget.result.nutrition),
                 const SizedBox(height: 24),
 
                 // Score breakdown
-                ScoreBreakdownWidget(breakdown: result.scoreBreakdown),
+                ScoreBreakdownWidget(breakdown: widget.result.scoreBreakdown),
                 const SizedBox(height: 24),
 
                 // Notes
-                if (result.notes.isNotEmpty) ...[
+                if (widget.result.notes.isNotEmpty) ...[
                   _buildNotes(),
                   const SizedBox(height: 24),
+                ],
+
+                // Auto-diary badge
+                if (AuthService().isLoggedIn && widget.result.savedToHistory) ...[
+                  _buildDiaryBadge(),
+                  const SizedBox(height: 12),
                 ],
 
                 // Scan again button
@@ -196,7 +216,7 @@ class ResultScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result.productName,
+                        widget.result.productName,
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -215,7 +235,7 @@ class ResultScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          result.servingSize,
+                          widget.result.servingSize,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: Colors.white60,
@@ -274,7 +294,7 @@ class ResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            result.explanation,
+            widget.result.explanation,
             style: GoogleFonts.inter(
               fontSize: 14,
               color: Colors.white70,
@@ -326,11 +346,152 @@ class ResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            result.notes,
+            widget.result.notes,
             style: GoogleFonts.inter(
               fontSize: 13,
               color: Colors.white54,
               height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForProfileSection(FamilyProfile profile) {
+    final allergies = profile.allergyList;
+    final ageNote = _ageGroupNote(profile.ageGroup);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.person_pin_rounded,
+                    size: 16, color: Color(0xFF4ECDC4)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Analisis untuk ${profile.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4ECDC4),
+                      ),
+                    ),
+                    Text(
+                      '${profile.relationLabel} • ${profile.ageGroupLabel}',
+                      style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (allergies.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFAD00).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: const Color(0xFFFFAD00).withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.warning_amber_rounded,
+                      size: 15, color: Color(0xFFFFAD00)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${profile.name} alergi terhadap: ${allergies.join(', ')}.\nPastikan produk ini tidak mengandung bahan tersebut.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFFFFAD00),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (ageNote != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline_rounded,
+                    size: 14, color: Colors.white30),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    ageNote,
+                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String? _ageGroupNote(String ageGroup) {
+    switch (ageGroup) {
+      case 'toddler':
+        return 'Balita (1–3 th): perhatikan kadar gula dan sodium yang masih sangat rendah untuk usia ini.';
+      case 'child':
+        return 'Anak-anak (4–12 th): batasi konsumsi produk tinggi gula, sodium, dan lemak jenuh.';
+      case 'elderly':
+        return 'Lansia (60+ th): perhatikan kadar sodium dan kolesterol untuk kesehatan jantung.';
+      default:
+        return null;
+    }
+  }
+
+  Widget _buildDiaryBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF4ECDC4).withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: const Color(0xFF4ECDC4).withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded,
+              color: Color(0xFF4ECDC4), size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Otomatis dicatat ke Diary Gizi hari ini',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF4ECDC4),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
