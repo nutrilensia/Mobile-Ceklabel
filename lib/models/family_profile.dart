@@ -50,8 +50,8 @@ const kRelationLabels = {
   'lainnya': 'Lainnya',
 };
 
+// Selaras dengan enum backend: child | teen | adult | elderly
 const kAgeGroupLabels = {
-  'toddler': 'Balita (1–3 th)',
   'child': 'Anak (4–12 th)',
   'teen': 'Remaja (13–17 th)',
   'adult': 'Dewasa (18–59 th)',

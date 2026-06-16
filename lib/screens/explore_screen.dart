@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 import 'compare_screen.dart';
+import 'photo_compare_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -19,11 +21,12 @@ class _ExploreScreenState extends State<ExploreScreen>
   List<Product> _searchResults = [];
   List<Product> _leaderboardBest = [];
   List<Product> _leaderboardWorst = [];
-  List<String> _categories = [];
+  List<ProductCategory> _categories = [];
   String? _selectedCategory;
   bool _loadingLeaderboard = false;
   bool _loadingSearch = false;
   bool _loadingCategories = false;
+  Timer? _debounce;
 
   final List<Product> _compareList = [];
 
@@ -37,9 +40,20 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _tabController.dispose();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  /// Debounce input pencarian agar tidak memanggil API tiap ketukan.
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      _search('');
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () => _search(query));
   }
 
   String? _leaderboardError;
@@ -48,7 +62,10 @@ class _ExploreScreenState extends State<ExploreScreen>
     setState(() => _loadingCategories = true);
     try {
       final cats = await ApiService().getProductCategories();
-      if (mounted) setState(() => _categories = cats);
+      if (mounted) {
+        setState(() =>
+            _categories = cats.where((c) => c.productCount > 0).toList());
+      }
     } catch (_) {
       // Categories optional, ignore error
     }
@@ -58,14 +75,15 @@ class _ExploreScreenState extends State<ExploreScreen>
   Future<void> _loadLeaderboard() async {
     setState(() { _loadingLeaderboard = true; _leaderboardError = null; });
     try {
-      final best = await ApiService().getLeaderboard(
-          category: _selectedCategory, order: 'best');
-      final worst = await ApiService().getLeaderboard(
-          category: _selectedCategory, order: 'worst');
+      // Ambil "terbaik" & "terburuk" paralel agar latensi tidak dobel.
+      final results = await Future.wait([
+        ApiService().getLeaderboard(category: _selectedCategory, order: 'best'),
+        ApiService().getLeaderboard(category: _selectedCategory, order: 'worst'),
+      ]);
       if (mounted) {
         setState(() {
-          _leaderboardBest = best;
-          _leaderboardWorst = worst;
+          _leaderboardBest = results[0];
+          _leaderboardWorst = results[1];
         });
       }
     } catch (e) {
@@ -119,7 +137,6 @@ class _ExploreScreenState extends State<ExploreScreen>
           items: _compareList
               .map((p) => CompareItem(productId: p.id))
               .toList(),
-          productNames: _compareList.map((p) => p.name).toList(),
         ),
       ),
     ).then((_) => setState(() => _compareList.clear()));
@@ -185,6 +202,45 @@ class _ExploreScreenState extends State<ExploreScreen>
             'Cari produk lalu tekan ⊕ untuk membandingkan hingga 3 produk sekaligus.',
             style: GoogleFonts.inter(fontSize: 11, color: Colors.white38, height: 1.4),
           ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PhotoCompareScreen())),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  const Color(0xFF4ECDC4).withValues(alpha: 0.15),
+                  const Color(0xFF4ECDC4).withValues(alpha: 0.05),
+                ]),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.add_a_photo_rounded,
+                      color: Color(0xFF4ECDC4), size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Bandingkan dari Foto',
+                            style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF4ECDC4))),
+                        Text('Foto langsung 2-3 produk, tanpa harus ada di database',
+                            style: GoogleFonts.inter(fontSize: 10, color: Colors.white38)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: Color(0xFF4ECDC4), size: 20),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -217,7 +273,7 @@ class _ExploreScreenState extends State<ExploreScreen>
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
-        onChanged: (v) => _search(v),
+        onChanged: _onSearchChanged,
         onSubmitted: _search,
       ),
     );
@@ -232,7 +288,7 @@ class _ExploreScreenState extends State<ExploreScreen>
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
           _categoryChip(null, 'Semua'),
-          ..._categories.map((c) => _categoryChip(c, _capitalize(c))),
+          ..._categories.map((c) => _categoryChip(c.id, _capitalize(c.id))),
         ],
       ),
     );

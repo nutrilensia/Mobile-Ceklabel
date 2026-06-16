@@ -21,7 +21,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   void _reload() {
-    final f = ApiService().getFamilyProfiles();
+    final f = ApiService().getFamilyProfiles(forceRefresh: true);
     setState(() { _future = f; });
   }
 

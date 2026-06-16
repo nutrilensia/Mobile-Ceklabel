@@ -11,7 +11,10 @@ import '../services/auth_service.dart';
 import 'result_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key});
+  /// Called by HomeScreen to notify tab visibility changes.
+  final ValueNotifier<bool>? visibilityNotifier;
+
+  const ScannerScreen({super.key, this.visibilityNotifier});
 
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
@@ -22,11 +25,20 @@ class _ScannerScreenState extends State<ScannerScreen>
   CameraController? _cameraController;
   List<CameraDescription> _cameras = [];
   bool _isCameraInitialized = false;
+  bool _isInitializing = false; // Guard against concurrent _initCamera calls
   bool _isProcessing = false;
+  bool _isCapturing = false; // true only during focus+shutter — hides overlay so user keeps camera still
   bool _hasPermission = false;
   bool _isFlashOn = false;
   bool _isFrontCamera = false;
+  bool _isTabVisible = true; // Track tab visibility
   String? _errorMessage;
+
+  // Zoom state
+  double _currentZoom = 1.0;
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
+  double _baseZoom = 1.0;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -58,6 +70,23 @@ class _ScannerScreenState extends State<ScannerScreen>
     );
     _initCamera();
     if (AuthService().isLoggedIn) _loadFamilyProfiles();
+
+    // Listen for tab visibility changes from HomeScreen
+    widget.visibilityNotifier?.addListener(_onTabVisibilityChanged);
+  }
+
+  void _onTabVisibilityChanged() {
+    final isVisible = widget.visibilityNotifier?.value ?? true;
+    if (isVisible == _isTabVisible) return;
+    _isTabVisible = isVisible;
+
+    if (isVisible) {
+      // Tab became visible — resume camera
+      _initCamera();
+    } else {
+      // Tab became hidden — release camera resources
+      _disposeCamera();
+    }
   }
 
   Future<void> _loadFamilyProfiles() async {
@@ -69,72 +98,128 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   @override
   void dispose() {
+    widget.visibilityNotifier?.removeListener(_onTabVisibilityChanged);
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
+    _cameraController = null;
     _pulseController.dispose();
     _loadingTimer?.cancel();
     super.dispose();
   }
 
+  /// Safely dispose camera and update state.
+  Future<void> _disposeCamera() async {
+    final controller = _cameraController;
+    _cameraController = null;
+    if (mounted) setState(() => _isCameraInitialized = false);
+    await controller?.dispose();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
+    // Don't do anything if the controller was already cleaned up
     if (state == AppLifecycleState.inactive) {
-      _cameraController?.dispose();
-      setState(() => _isCameraInitialized = false);
+      _disposeCamera();
     } else if (state == AppLifecycleState.resumed) {
-      _initCamera();
+      // Only re-init if the tab is visible
+      if (_isTabVisible) {
+        _initCamera();
+      }
     }
   }
 
   Future<void> _initCamera() async {
-    final status = await Permission.camera.request();
-    if (!status.isGranted) {
-      setState(() {
-        _hasPermission = false;
-        _errorMessage = 'Izin kamera diperlukan untuk scan label';
-      });
-      return;
-    }
-
-    setState(() {
-      _hasPermission = true;
-      _errorMessage = null;
-    });
+    // Guard: prevent concurrent initializations
+    if (_isInitializing) return;
+    _isInitializing = true;
 
     try {
+      final status = await Permission.camera.request();
+      if (!mounted) return;
+
+      if (!status.isGranted) {
+        setState(() {
+          _hasPermission = false;
+          _errorMessage = 'Izin kamera diperlukan untuk scan label';
+        });
+        return;
+      }
+
+      setState(() {
+        _hasPermission = true;
+        _errorMessage = null;
+      });
+
       _cameras = await availableCameras();
+      if (!mounted) return;
+
       if (_cameras.isEmpty) {
         setState(() => _errorMessage = 'Tidak ada kamera yang tersedia');
         return;
       }
 
-      final camera = _isFrontCamera && _cameras.length > 1 ? _cameras[1] : _cameras[0];
+      final camera = _isFrontCamera && _cameras.length > 1
+          ? _cameras[1]
+          : _cameras[0];
 
-      await _cameraController?.dispose();
+      // Dispose old controller safely before creating new one
+      final oldController = _cameraController;
+      _cameraController = null;
+      await oldController?.dispose();
 
-      _cameraController = CameraController(
+      final controller = CameraController(
         camera,
-        ResolutionPreset.medium,
+        ResolutionPreset.high, // Upgraded from medium for better label scanning
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
-      await _cameraController!.initialize();
+      _cameraController = controller;
 
-      // Restore flash state
+      await controller.initialize();
+      if (!mounted) return;
+
+      // Check that our controller is still the current one (not replaced by another init)
+      if (_cameraController != controller) {
+        await controller.dispose();
+        return;
+      }
+
+      // Get zoom range
+      _minZoom = await controller.getMinZoomLevel();
+      _maxZoom = await controller.getMaxZoomLevel();
+      _currentZoom = _minZoom;
+
+      // Restore flash state (only for rear camera)
       if (!_isFrontCamera && _isFlashOn) {
-        await _cameraController!.setFlashMode(FlashMode.torch);
+        try {
+          await controller.setFlashMode(FlashMode.torch);
+        } catch (_) {
+          _isFlashOn = false;
+        }
+      }
+
+      // Set auto-focus mode
+      try {
+        await controller.setFocusMode(FocusMode.auto);
+      } catch (_) {
+        // Some devices may not support programmatic focus mode
       }
 
       if (mounted) setState(() => _isCameraInitialized = true);
     } catch (e) {
-      setState(() => _errorMessage = 'Gagal membuka kamera: $e');
+      if (mounted) {
+        setState(() => _errorMessage = 'Gagal membuka kamera: $e');
+      }
+    } finally {
+      _isInitializing = false;
     }
   }
 
   Future<void> _toggleFlash() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+
     if (_isFrontCamera) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -144,9 +229,16 @@ class _ScannerScreenState extends State<ScannerScreen>
       );
       return;
     }
-    final newFlash = _isFlashOn ? FlashMode.off : FlashMode.torch;
-    await _cameraController!.setFlashMode(newFlash);
-    setState(() => _isFlashOn = !_isFlashOn);
+
+    try {
+      final newFlash = _isFlashOn ? FlashMode.off : FlashMode.torch;
+      await controller.setFlashMode(newFlash);
+      if (mounted) setState(() => _isFlashOn = !_isFlashOn);
+    } catch (e) {
+      if (mounted) {
+        _showError('Flash tidak didukung pada perangkat ini');
+      }
+    }
   }
 
   Future<void> _switchCamera() async {
@@ -156,19 +248,26 @@ class _ScannerScreenState extends State<ScannerScreen>
       );
       return;
     }
+
     // Turn off flash when switching to front
     if (!_isFrontCamera && _isFlashOn) {
-      await _cameraController?.setFlashMode(FlashMode.off);
+      try {
+        await _cameraController?.setFlashMode(FlashMode.off);
+      } catch (_) {}
       _isFlashOn = false;
     }
+
     setState(() {
       _isCameraInitialized = false;
       _isFrontCamera = !_isFrontCamera;
+      _currentZoom = 1.0;
     });
+
     await _initCamera();
   }
 
   void _setProcessing(bool isProcessing) {
+    if (!mounted) return;
     setState(() {
       _isProcessing = isProcessing;
       if (isProcessing) {
@@ -179,6 +278,8 @@ class _ScannerScreenState extends State<ScannerScreen>
             setState(() {
               if (_loadingTextIndex < _loadingMessages.length - 1) _loadingTextIndex++;
             });
+          } else {
+            timer.cancel();
           }
         });
       } else {
@@ -188,12 +289,46 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Future<void> _captureAndScan() async {
-    if (_isProcessing || _cameraController == null || !_cameraController!.value.isInitialized) return;
-    _setProcessing(true);
+    final controller = _cameraController;
+    if (_isProcessing || _isCapturing || controller == null || !controller.value.isInitialized) return;
+
+    // Lock button immediately — but DON'T show loading overlay yet so user keeps camera still
+    if (mounted) setState(() => _isCapturing = true);
+
     try {
-      final image = await _cameraController!.takePicture();
+      // Auto-focus at center — give it more time so label is sharp
+      try {
+        await controller.setFocusPoint(const Offset(0.5, 0.5));
+        await Future.delayed(const Duration(milliseconds: 600));
+      } catch (_) {}
+
+      // Switch flash from torch to auto for capture to avoid overexposure
+      if (_isFlashOn) {
+        try {
+          await controller.setFlashMode(FlashMode.auto);
+        } catch (_) {}
+      }
+
+      if (!mounted) return;
+
+      // Take the photo — ONLY NOW show the full loading overlay
+      final image = await controller.takePicture();
+      if (!mounted) return;
+
+      // Photo is captured — safe to show loading UI and let user move
+      if (mounted) setState(() => _isCapturing = false);
+      _setProcessing(true);
+
+      // Restore torch mode after capture if flash was on
+      if (_isFlashOn) {
+        try {
+          await controller.setFlashMode(FlashMode.torch);
+        } catch (_) {}
+      }
+
       await _sendToApi(File(image.path));
     } catch (e) {
+      if (mounted) setState(() => _isCapturing = false);
       _showError('Gagal mengambil foto: $e');
       _setProcessing(false);
     }
@@ -202,8 +337,12 @@ class _ScannerScreenState extends State<ScannerScreen>
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
     try {
-      final image = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
       if (image == null) return;
+      if (!mounted) return;
       _setProcessing(true);
       await _sendToApi(File(image.path));
     } catch (e) {
@@ -252,6 +391,26 @@ class _ScannerScreenState extends State<ScannerScreen>
     );
   }
 
+  // ── Zoom Handling ──────────────────────────────────────────────────────────
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _baseZoom = _currentZoom;
+  }
+
+  Future<void> _onScaleUpdate(ScaleUpdateDetails details) async {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final newZoom = (_baseZoom * details.scale).clamp(_minZoom, _maxZoom);
+    if (newZoom == _currentZoom) return;
+
+    _currentZoom = newZoom;
+    try {
+      await controller.setZoomLevel(_currentZoom);
+      if (mounted) setState(() {}); // Update zoom indicator
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -260,7 +419,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         fit: StackFit.expand,
         children: [
           if (_isCameraInitialized && _cameraController != null)
-            ClipRRect(child: CameraPreview(_cameraController!))
+            _buildCameraPreview()
           else
             _buildCameraFallback(),
 
@@ -286,8 +445,32 @@ class _ScannerScreenState extends State<ScannerScreen>
           _buildBottomControls(),
           if (AuthService().isLoggedIn) _buildProfileSelector(),
 
+          // Zoom indicator
+          if (_isCameraInitialized && _currentZoom > _minZoom) _buildZoomIndicator(),
+
+          if (_isCapturing) _buildShutterHint(),
           if (_isProcessing) _buildLoadingOverlay(),
         ],
+      ),
+    );
+  }
+
+  /// Camera preview with proper aspect ratio and pinch-to-zoom.
+  Widget _buildCameraPreview() {
+    final controller = _cameraController!;
+    return GestureDetector(
+      onScaleStart: _onScaleStart,
+      onScaleUpdate: _onScaleUpdate,
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox(
+            width: controller.value.previewSize?.height ?? 1,
+            height: controller.value.previewSize?.width ?? 1,
+            child: CameraPreview(controller),
+          ),
+        ),
       ),
     );
   }
@@ -320,6 +503,33 @@ class _ScannerScreenState extends State<ScannerScreen>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text('Buka Pengaturan', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              ),
+            ] else if (_hasPermission && _errorMessage != null) ...[
+              // Camera error with retry — permission granted but camera init failed
+              const Icon(Icons.error_outline_rounded, size: 64, color: Colors.white24),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(fontSize: 15, color: Colors.white54),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _isInitializing ? null : _initCamera,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(
+                  _isInitializing ? 'Memuat...' : 'Coba Lagi',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4ECDC4),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ] else ...[
               const CircularProgressIndicator(color: Color(0xFF4ECDC4)),
@@ -391,6 +601,37 @@ class _ScannerScreenState extends State<ScannerScreen>
           bottom: !top ? BorderSide(color: color, width: thickness) : BorderSide.none,
           left: left ? BorderSide(color: color, width: thickness) : BorderSide.none,
           right: !left ? BorderSide(color: color, width: thickness) : BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZoomIndicator() {
+    final zoomText = '${_currentZoom.toStringAsFixed(1)}x';
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 70,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: AnimatedOpacity(
+          opacity: _currentZoom > _minZoom ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+            ),
+            child: Text(
+              zoomText,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4ECDC4),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -564,6 +805,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               ('💡', 'Gunakan flash jika pencahayaan kurang'),
               ('📐', 'Arahkan kamera sejajar dengan label'),
               ('🔍', 'Fokus pada tabel informasi nilai gizi'),
+              ('🤏', 'Cubit layar untuk zoom in/out'),
               ('🔄', 'Gunakan kamera belakang untuk hasil terbaik'),
             ].map(
               (tip) => Padding(
@@ -822,6 +1064,40 @@ class _ScannerScreenState extends State<ScannerScreen>
       case 'orang-tua': return Icons.elderly_rounded;
       default: return Icons.people_alt_rounded;
     }
+  }
+
+  Widget _buildShutterHint() {
+    return Positioned(
+      bottom: 160,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 14, height: 14,
+                child: CircularProgressIndicator(
+                  color: Color(0xFF4ECDC4), strokeWidth: 2,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Tahan kamera — sedang memfokus...',
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildLoadingOverlay() {

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
 import '../models/family_profile.dart';
+import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/nutri_score_badge.dart';
 import '../widgets/nutrition_card.dart';
 import '../widgets/score_breakdown.dart';
 import '../widgets/analogy_card.dart';
+import '../widgets/gamification_feedback.dart';
 
 class ResultScreen extends StatefulWidget {
   final ScanResult result;
@@ -19,6 +21,17 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
+  bool _loggedToDiary = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Tampilkan feedback gamifikasi (poin + badge) setelah layar muncul.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) GamificationFeedback.show(context, widget.result.gamification);
+    });
+  }
+
   Color get _nutriColor {
     try {
       return Color(int.parse(widget.result.nutriScore.color.replaceFirst('#', '0xFF')));
@@ -29,12 +42,14 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final r = widget.result;
+    final canLog = AuthService().isLoggedIn && r.id != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // App bar
           SliverAppBar(
             backgroundColor: const Color(0xFF0A0A0F),
             expandedHeight: 100,
@@ -48,23 +63,15 @@ class _ResultScreenState extends State<ResultScreen> {
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white, size: 18),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-              title: Text(
-                'Hasil Analisis',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              title: Text('Hasil Analisis',
+                  style: GoogleFonts.poppins(
+                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
             actions: [
               Container(
@@ -73,86 +80,91 @@ class _ResultScreenState extends State<ResultScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF4ECDC4).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF4ECDC4).withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.verified_rounded,
-                      size: 14,
-                      color: const Color(0xFF4ECDC4).withValues(alpha: 0.8),
-                    ),
+                    Icon(Icons.verified_rounded,
+                        size: 14, color: const Color(0xFF4ECDC4).withValues(alpha: 0.8)),
                     const SizedBox(width: 4),
-                    Text(
-                      '${(widget.result.confidence * 100).toInt()}%',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF4ECDC4),
-                      ),
-                    ),
+                    Text('${(r.confidence * 100).toInt()}%',
+                        style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF4ECDC4))),
                   ],
                 ),
               ),
             ],
           ),
-
-          // Content
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Product header
                 _buildProductHeader(),
                 const SizedBox(height: 16),
 
-                // For-profile section (if a family member was selected)
-                if (widget.forProfile != null) ...[
-                  _buildForProfileSection(widget.forProfile!),
+                // Label Detective: klaim menyesatkan
+                if (r.misleadingClaims.isNotEmpty) ...[
+                  _buildLabelDetective(r.misleadingClaims),
                   const SizedBox(height: 16),
                 ],
 
-                // Nutri-Score
+                // Insight per anggota keluarga (dari backend)
+                if (r.familyInsights.isNotEmpty) ...[
+                  _buildFamilyInsights(r.familyInsights),
+                  const SizedBox(height: 16),
+                ],
+
                 NutriScoreBadge(
-                  grade: widget.result.nutriScore.grade,
-                  label: widget.result.nutriScore.label,
-                  colorHex: widget.result.nutriScore.color,
-                  finalScore: widget.result.nutriScore.finalScore,
+                  grade: r.nutriScore.grade,
+                  label: r.nutriScore.label,
+                  colorHex: r.nutriScore.color,
+                  finalScore: r.nutriScore.finalScore,
                 ),
                 const SizedBox(height: 24),
 
-                // Explanation
                 _buildExplanation(),
                 const SizedBox(height: 24),
 
-                // Analogies
-                AnalogyCard(analogies: widget.result.analogies),
+                // Budget Harian (hanya untuk user login)
+                if (r.dailyBudget != null) ...[
+                  _buildDailyBudget(r.dailyBudget!),
+                  const SizedBox(height: 24),
+                ],
+
+                // Komposisi & alergen
+                if (r.ingredients != null && !r.ingredients!.isEmpty) ...[
+                  _buildIngredients(r.ingredients!),
+                  const SizedBox(height: 24),
+                ],
+
+                AnalogyCard(analogies: r.analogies),
                 const SizedBox(height: 24),
 
-                // Nutrition facts
-                NutritionCard(nutrition: widget.result.nutrition),
+                NutritionCard(nutrition: r.nutrition),
                 const SizedBox(height: 24),
 
-                // Score breakdown
-                ScoreBreakdownWidget(breakdown: widget.result.scoreBreakdown),
+                ScoreBreakdownWidget(breakdown: r.scoreBreakdown),
                 const SizedBox(height: 24),
 
-                // Notes
-                if (widget.result.notes.isNotEmpty) ...[
+                // Alternatif lebih sehat (hanya grade D/E)
+                if (r.alternatives.isNotEmpty) ...[
+                  _buildAlternatives(r.alternatives),
+                  const SizedBox(height: 24),
+                ],
+
+                if (r.notes.isNotEmpty) ...[
                   _buildNotes(),
                   const SizedBox(height: 24),
                 ],
 
-                // Auto-diary badge
-                if (AuthService().isLoggedIn && widget.result.savedToHistory) ...[
-                  _buildDiaryBadge(),
+                if (canLog) ...[
+                  _buildLogToDiaryButton(),
                   const SizedBox(height: 12),
                 ],
 
-                // Scan again button
                 _buildScanAgainButton(context),
                 const SizedBox(height: 40),
               ]),
@@ -164,105 +176,20 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _buildProductHeader() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              _nutriColor.withValues(alpha: 0.12),
-              _nutriColor.withValues(alpha: 0.04),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _nutriColor.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _nutriColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.inventory_2_rounded,
-                    color: _nutriColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.result.productName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.result.servingSize,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: Colors.white60,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+    final r = widget.result;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _nutriColor.withValues(alpha: 0.12),
+            _nutriColor.withValues(alpha: 0.04),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildExplanation() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: _nutriColor.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,98 +197,57 @@ class _ResultScreenState extends State<ResultScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9B59B6).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: _nutriColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.info_outline_rounded,
-                  color: Color(0xFF9B59B6),
-                  size: 20,
-                ),
+                child: Icon(Icons.inventory_2_rounded, color: _nutriColor, size: 24),
               ),
-              const SizedBox(width: 12),
-              Text(
-                'Penjelasan',
-                style: GoogleFonts.poppins(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(r.productName,
+                        style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.3)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _chip(r.servingSize, Colors.white.withValues(alpha: 0.08), Colors.white60),
+                        if (r.category.isNotEmpty)
+                          _chip(_capitalize(r.category),
+                              const Color(0xFFAD7BFF).withValues(alpha: 0.12),
+                              const Color(0xFFAD7BFF)),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            widget.result.explanation,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: Colors.white70,
-              height: 1.6,
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNotes() {
+  Widget _chip(String text, Color bg, Color fg) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C3E50).withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF95A5A6).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.note_alt_rounded,
-                  color: Color(0xFF95A5A6),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Catatan',
-                style: GoogleFonts.poppins(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            widget.result.notes,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: Colors.white54,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      child: Text(text,
+          style: GoogleFonts.inter(
+              fontSize: 11, color: fg, fontWeight: FontWeight.w500)),
     );
   }
 
-  Widget _buildForProfileSection(FamilyProfile profile) {
-    final allergies = profile.allergyList;
-    final ageNote = _ageGroupNote(profile.ageGroup);
-
+  Widget _buildFamilyInsights(List<ProfileInsight> insights) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -380,123 +266,529 @@ class _ResultScreenState extends State<ResultScreen> {
                   color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person_pin_rounded,
+                child: const Icon(Icons.family_restroom_rounded,
                     size: 16, color: Color(0xFF4ECDC4)),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Column(
+              Text('Untuk Keluarga',
+                  style: GoogleFonts.poppins(
+                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...insights.map(_buildProfileInsightRow),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileInsightRow(ProfileInsight insight) {
+    final highlighted = widget.forProfile != null &&
+        (insight.profileId == widget.forProfile!.id);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? const Color(0xFF4ECDC4).withValues(alpha: 0.07)
+            : Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: highlighted
+              ? const Color(0xFF4ECDC4).withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(insight.hasDanger
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_outline_rounded,
+                  size: 14,
+                  color: insight.hasDanger
+                      ? const Color(0xFFFF6B6B)
+                      : const Color(0xFF4ECDC4)),
+              const SizedBox(width: 8),
+              Text(insight.profileName,
+                  style: GoogleFonts.inter(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+            ],
+          ),
+          if (insight.flags.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 22),
+              child: Text('Relatif aman dalam porsi wajar',
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+            )
+          else
+            ...insight.flags.map((f) {
+              final c = _severityColor(f.severity);
+              return Padding(
+                padding: const EdgeInsets.only(top: 6, left: 22),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Analisis untuk ${profile.name}',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF4ECDC4),
-                      ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 5, right: 8),
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(color: c, shape: BoxShape.circle),
                     ),
-                    Text(
-                      '${profile.relationLabel} • ${profile.ageGroupLabel}',
-                      style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                    Expanded(
+                      child: Text(f.message,
+                          style: GoogleFonts.inter(fontSize: 12, color: c, height: 1.4)),
                     ),
                   ],
                 ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Color _severityColor(String severity) {
+    switch (severity) {
+      case 'danger':
+        return const Color(0xFFFF6B6B);
+      case 'caution':
+        return const Color(0xFFFFAD00);
+      default:
+        return const Color(0xFF4ECDC4);
+    }
+  }
+
+  Widget _buildIngredients(IngredientInfo ing) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFAD00).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.science_outlined,
+                    color: Color(0xFFFFAD00), size: 20),
               ),
+              const SizedBox(width: 12),
+              Text('Komposisi & Aditif',
+                  style: GoogleFonts.poppins(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
             ],
           ),
-          if (allergies.isNotEmpty) ...[
-            const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          if (ing.allergens.isNotEmpty) ...[
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFAD00).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: const Color(0xFFFFAD00).withValues(alpha: 0.25)),
+                color: const Color(0xFFFF6B6B).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.25)),
               ),
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      size: 15, color: Color(0xFFFFAD00)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${profile.name} alergi terhadap: ${allergies.join(', ')}.\nPastikan produk ini tidak mengandung bahan tersebut.',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFFFFAD00),
-                        height: 1.4,
-                      ),
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.dangerous_outlined,
+                          size: 15, color: Color(0xFFFF6B6B)),
+                      const SizedBox(width: 6),
+                      Text('Mengandung Alergen',
+                          style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFF6B6B))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: ing.allergens
+                        .map((a) => _tag(a.label, const Color(0xFFFF6B6B)))
+                        .toList(),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
           ],
-          if (ageNote != null) ...[
+
+          if (ing.additives.isNotEmpty) ...[
+            Text('Aditif terdeteksi',
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
             const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.info_outline_rounded,
-                    size: 14, color: Colors.white30),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    ageNote,
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38, height: 1.4),
-                  ),
-                ),
-              ],
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: ing.additives
+                  .map((a) => _tag(a.label, _additiveColor(a.type)))
+                  .toList(),
             ),
+            const SizedBox(height: 12),
+          ],
+
+          if (ing.warnings.isNotEmpty) ...[
+            ...ing.warnings.map((w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline_rounded,
+                          size: 13, color: Colors.white38),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(w,
+                            style: GoogleFonts.inter(
+                                fontSize: 12, color: Colors.white60, height: 1.4)),
+                      ),
+                    ],
+                  ),
+                )),
+            const SizedBox(height: 4),
+          ],
+
+          if (ing.raw != null && ing.raw!.isNotEmpty) ...[
+            const Divider(color: Colors.white12, height: 20),
+            Text('Daftar komposisi',
+                style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+            const SizedBox(height: 4),
+            Text(ing.raw!,
+                style: GoogleFonts.inter(
+                    fontSize: 12, color: Colors.white54, height: 1.5)),
           ],
         ],
       ),
     );
   }
 
-  String? _ageGroupNote(String ageGroup) {
-    switch (ageGroup) {
-      case 'toddler':
-        return 'Balita (1–3 th): perhatikan kadar gula dan sodium yang masih sangat rendah untuk usia ini.';
-      case 'child':
-        return 'Anak-anak (4–12 th): batasi konsumsi produk tinggi gula, sodium, dan lemak jenuh.';
-      case 'elderly':
-        return 'Lansia (60+ th): perhatikan kadar sodium dan kolesterol untuk kesehatan jantung.';
+  Widget _tag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(text,
+          style: GoogleFonts.inter(
+              fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+    );
+  }
+
+  Color _additiveColor(String type) {
+    switch (type) {
+      case 'sweetener':
+        return const Color(0xFFAD7BFF);
+      case 'msg':
+        return const Color(0xFFFFAD00);
+      case 'preservative':
+        return const Color(0xFF4ECDC4);
+      case 'coloring':
+        return const Color(0xFFFF8FB1);
+      case 'trans_fat':
+        return const Color(0xFFFF6B6B);
       default:
-        return null;
+        return Colors.white54;
     }
   }
 
-  Widget _buildDiaryBadge() {
+  Widget _buildExplanation() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF4ECDC4).withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: const Color(0xFF4ECDC4).withValues(alpha: 0.2)),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_rounded,
-              color: Color(0xFF4ECDC4), size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Otomatis dicatat ke Diary Gizi hari ini',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: const Color(0xFF4ECDC4),
-                fontWeight: FontWeight.w500,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B59B6).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.info_outline_rounded,
+                    color: Color(0xFF9B59B6), size: 20),
               ),
-            ),
+              const SizedBox(width: 12),
+              Text('Penjelasan',
+                  style: GoogleFonts.poppins(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+            ],
           ),
+          const SizedBox(height: 14),
+          Text(widget.result.explanation,
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70, height: 1.6)),
         ],
       ),
     );
+  }
+
+  Widget _buildNotes() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3E50).withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF95A5A6).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.note_alt_rounded,
+                    color: Color(0xFF95A5A6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text('Catatan',
+                  style: GoogleFonts.poppins(
+                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(widget.result.notes,
+              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54, height: 1.6)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogToDiaryButton() {
+    return GestureDetector(
+      onTap: _loggedToDiary ? null : _showLogSheet,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: _loggedToDiary
+              ? const Color(0xFF4ECDC4).withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color(0xFF4ECDC4).withValues(alpha: _loggedToDiary ? 0.3 : 0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(_loggedToDiary ? Icons.check_circle_rounded : Icons.add_chart_rounded,
+                color: const Color(0xFF4ECDC4), size: 20),
+            const SizedBox(width: 10),
+            Text(_loggedToDiary ? 'Sudah dicatat ke Diary' : 'Catat ke Diary Gizi',
+                style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF4ECDC4))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showLogSheet() async {
+    double servings = 1;
+    FamilyProfile? profile;
+    List<FamilyProfile> profiles = [];
+    try {
+      profiles = await ApiService().getFamilyProfiles();
+    } catch (_) {}
+    if (!mounted) return;
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF12121F),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Catat ke Diary',
+                  style: GoogleFonts.poppins(
+                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 4),
+              Text(widget.result.productName,
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+              const SizedBox(height: 20),
+
+              Text('Jumlah porsi',
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [0.5, 1.0, 1.5, 2.0, 3.0].map((s) {
+                  final sel = servings == s;
+                  return GestureDetector(
+                    onTap: () => setSheet(() => servings = s),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
+                            : Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: sel
+                                ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
+                                : Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Text(s == s.toInt() ? '${s.toInt()}' : '$s',
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: sel ? const Color(0xFF4ECDC4) : Colors.white60,
+                              fontWeight: sel ? FontWeight.w600 : FontWeight.normal)),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              Text('Untuk siapa',
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _profilePill(ctx, 'Saya', profile == null,
+                      () => setSheet(() => profile = null)),
+                  ...profiles.map((p) => _profilePill(
+                      ctx, p.name, profile?.id == p.id,
+                      () => setSheet(() => profile = p))),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4ECDC4),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text('Catat Sekarang',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 15)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true) {
+      await _doLog(servings, profile);
+    }
+  }
+
+  Widget _profilePill(BuildContext ctx, String name, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: selected
+                  ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Text(name,
+            style: GoogleFonts.inter(
+                fontSize: 13,
+                color: selected ? const Color(0xFF4ECDC4) : Colors.white60,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+      ),
+    );
+  }
+
+  Future<void> _doLog(double servings, FamilyProfile? profile) async {
+    try {
+      final res = await ApiService().logDiary(
+        scanId: widget.result.id,
+        servings: servings,
+        profileId: profile?.id,
+      );
+      if (!mounted) return;
+      setState(() => _loggedToDiary = true);
+
+      final warnings = res.summary.warnings;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            warnings.isNotEmpty ? warnings.first : res.message,
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+          ),
+          backgroundColor: warnings.isNotEmpty
+              ? const Color(0xFFE63E11)
+              : const Color(0xFF1A1A2E),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      GamificationFeedback.show(context, res.gamification);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString(), style: GoogleFonts.inter(fontSize: 13)),
+          backgroundColor: const Color(0xFFE63E11),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
   }
 
   Widget _buildScanAgainButton(BuildContext context) {
@@ -522,23 +814,376 @@ class _ResultScreenState extends State<ResultScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.qr_code_scanner_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
+            const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
             const SizedBox(width: 10),
-            Text(
-              'Scan Lagi',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            Text('Scan Lagi',
+                style: GoogleFonts.poppins(
+                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
           ],
         ),
       ),
     );
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s
+        .split('-')
+        .map((w) => w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1))
+        .join(' ');
+  }
+
+  // ── Label Detective ─────────────────────────────────────────────────────────
+
+  Widget _buildLabelDetective(List<MisleadingClaim> claims) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF6B35).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6B35).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.policy_rounded,
+                    size: 16, color: Color(0xFFFF6B35)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Label Detective',
+                        style: GoogleFonts.poppins(
+                            fontSize: 14, fontWeight: FontWeight.w700,
+                            color: const Color(0xFFFF6B35))),
+                    Text('Klaim pada kemasan yang perlu diperhatikan',
+                        style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...claims.map((c) => _buildClaimRow(c)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClaimRow(MisleadingClaim c) {
+    final color = c.severity == 'warning'
+        ? const Color(0xFFFF6B6B)
+        : c.severity == 'caution'
+            ? const Color(0xFFFFAD00)
+            : const Color(0xFF4ECDC4);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                c.severity == 'warning'
+                    ? Icons.error_outline_rounded
+                    : c.severity == 'caution'
+                        ? Icons.warning_amber_rounded
+                        : Icons.info_outline_rounded,
+                size: 14,
+                color: color,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text('"${c.claim}"',
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Text(c.issue,
+                style: GoogleFonts.inter(
+                    fontSize: 11, color: Colors.white60, height: 1.4)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Budget Harian ────────────────────────────────────────────────────────────
+
+  Widget _buildDailyBudget(DailyBudget budget) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.pie_chart_rounded,
+                    size: 16, color: Color(0xFF6C63FF)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Dampak ke Budget Harian',
+                        style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                    Text('Jika kamu makan 1 saji hari ini',
+                        style: GoogleFonts.inter(
+                            fontSize: 11, color: Colors.white38)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (budget.alerts.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...budget.alerts.map(
+              (a) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        size: 13, color: Color(0xFFFFAD00)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(a,
+                          style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFFFFAD00),
+                              height: 1.4)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          _budgetRow('Gula', budget.sugar, 'g'),
+          _budgetRow('Natrium', budget.sodium, 'mg'),
+          _budgetRow('Kalori', budget.calories, 'kkal'),
+          _budgetRow('Lemak', budget.fatTotal, 'g'),
+        ],
+      ),
+    );
+  }
+
+  Widget _budgetRow(String label, DailyBudgetNutrient n, String unit) {
+    final pct = n.pctAfter.clamp(0, 100);
+    Color barColor;
+    if (n.pctAfter >= 100) barColor = const Color(0xFFFF6B6B);
+    else if (n.pctAfter >= 80) barColor = const Color(0xFFFFAD00);
+    else barColor = const Color(0xFF4ECDC4);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 56,
+                child: Text(label,
+                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white54)),
+              ),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Stack(
+                    children: [
+                      Container(
+                        height: 6,
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: n.pctBefore / 100,
+                        child: Container(
+                          height: 6,
+                          color: Colors.white24,
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: pct / 100,
+                        child: Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: barColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('${n.pctAfter}%',
+                  style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: barColor)),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 56, top: 2),
+            child: Text(
+              '+${n.addedByThis}$unit → total ${n.afterEating}$unit / ${n.limit.toInt()}$unit',
+              style: GoogleFonts.inter(fontSize: 10, color: Colors.white30),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Alternatif Lebih Sehat ────────────────────────────────────────────────────
+
+  Widget _buildAlternatives(List<AlternativeProduct> alts) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E8F4E).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1E8F4E).withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.swap_vert_circle_rounded,
+                    size: 16, color: Color(0xFF4ECDC4)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Alternatif Lebih Sehat',
+                        style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                    Text('Produk serupa dengan NutriScore lebih baik',
+                        style: GoogleFonts.inter(
+                            fontSize: 11, color: Colors.white38)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...alts.map(_buildAltRow),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAltRow(AlternativeProduct alt) {
+    final gradeColor = _gradeColor(alt.nutriScore);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: gradeColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+            ),
+            alignment: Alignment.center,
+            child: Text(alt.nutriScore,
+                style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: gradeColor)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(alt.name,
+                    style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                if (alt.brand != null && alt.brand!.isNotEmpty)
+                  Text(alt.brand!,
+                      style: GoogleFonts.inter(
+                          fontSize: 11, color: Colors.white38)),
+              ],
+            ),
+          ),
+          Text('skor ${alt.finalScore}',
+              style: GoogleFonts.inter(fontSize: 10, color: Colors.white30)),
+        ],
+      ),
+    );
+  }
+
+  Color _gradeColor(String grade) {
+    switch (grade.toUpperCase()) {
+      case 'A': return const Color(0xFF1E8F4E);
+      case 'B': return const Color(0xFF6DB33F);
+      case 'C': return const Color(0xFFFFAD00);
+      case 'D': return const Color(0xFFEF7D00);
+      case 'E': return const Color(0xFFE63312);
+      default:  return const Color(0xFF888888);
+    }
   }
 }

@@ -11,6 +11,8 @@ import '../models/quiz.dart';
 import '../models/tip.dart';
 import '../models/gamification.dart';
 import '../models/weekly_report.dart';
+import '../models/chat_message.dart';
+import '../models/health_risk.dart';
 import '../services/auth_service.dart';
 
 class ApiService {
@@ -30,6 +32,14 @@ class ApiService {
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
+  // Cache ringan profil keluarga (sering dipakai scanner/diary/result).
+  List<FamilyProfile>? _familyCache;
+
+  /// Kosongkan semua cache (dipanggil saat ganti akun).
+  void clearCaches() {
+    _familyCache = null;
+  }
+
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   Future<void> register(String name, String email, String password) async {
@@ -39,6 +49,7 @@ class ApiService {
         data: {'name': name, 'email': email, 'password': password},
       );
       final data = res.data['data'];
+      clearCaches();
       AuthService().setFromLogin(
         data['token'] as String,
         UserModel.fromJson(data['user'] as Map<String, dynamic>),
@@ -55,6 +66,7 @@ class ApiService {
         data: {'email': email, 'password': password},
       );
       final data = res.data['data'];
+      clearCaches();
       AuthService().setFromLogin(
         data['token'] as String,
         UserModel.fromJson(data['user'] as Map<String, dynamic>),
@@ -67,7 +79,8 @@ class ApiService {
   Future<UserModel> getProfile() async {
     try {
       final res = await _dio.get('$baseUrl/api/auth/me', options: _authHeader());
-      final user = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
+      final data = res.data['data'] as Map<String, dynamic>;
+      final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       AuthService().updateUser(user);
       return user;
     } on DioException catch (e) {
@@ -89,8 +102,9 @@ class ApiService {
       );
 
       final existing = AuthService().currentUser;
-      final raw = res.data['data'] as Map<String, dynamic>? ?? {};
-      // Merge API response with existing data to handle partial responses
+      final wrapper = res.data['data'] as Map<String, dynamic>? ?? {};
+      final raw = wrapper['user'] as Map<String, dynamic>? ?? wrapper;
+      // Gabungkan response API dengan data lokal untuk menangani respons parsial
       final merged = UserModel(
         id: raw['id']?.toString().isNotEmpty == true
             ? raw['id'].toString()
@@ -176,32 +190,25 @@ class ApiService {
 
   // ── Profil Keluarga ───────────────────────────────────────────────────────
 
-  Future<List<FamilyProfile>> getFamilyProfiles() async {
+  Future<List<FamilyProfile>> getFamilyProfiles({bool forceRefresh = false}) async {
+    if (!forceRefresh && _familyCache != null) return _familyCache!;
     try {
       final res = await _dio.get('$baseUrl/api/family', options: _authHeader());
       final raw = res.data['data'];
       List list;
-      if (raw is List) {
-        list = raw;
-      } else if (raw is Map) {
-        final inner = raw['profiles'] ?? raw['members'] ?? raw['family'] ?? raw['data'];
+      if (raw is Map) {
+        final inner = raw['profiles'] ?? raw['members'] ?? raw['family'];
         list = inner is List ? inner : [];
-      } else if (res.data is List) {
-        list = res.data as List;
+      } else if (raw is List) {
+        list = raw;
       } else {
-        // Try top-level keys as last resort
-        final top = res.data;
-        if (top is Map) {
-          final inner = top['profiles'] ?? top['members'] ?? top['family'];
-          list = inner is List ? inner : [];
-        } else {
-          list = [];
-        }
+        list = [];
       }
-      return list
+      _familyCache = list
           .whereType<Map<String, dynamic>>()
           .map(FamilyProfile.fromJson)
           .toList();
+      return _familyCache!;
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -224,6 +231,7 @@ class ApiService {
         },
         options: _authHeader(),
       );
+      _familyCache = null;
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -236,6 +244,7 @@ class ApiService {
         data: data,
         options: _authHeader(),
       );
+      _familyCache = null;
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -244,6 +253,7 @@ class ApiService {
   Future<void> deleteFamilyProfile(String id) async {
     try {
       await _dio.delete('$baseUrl/api/family/$id', options: _authHeader());
+      _familyCache = null;
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -251,7 +261,7 @@ class ApiService {
 
   // ── Diary Gizi ────────────────────────────────────────────────────────────
 
-  Future<DiaryEntry> logDiary({
+  Future<DiaryLogResult> logDiary({
     String? scanId,
     String? productId,
     double servings = 1.0,
@@ -271,7 +281,7 @@ class ApiService {
         data: body,
         options: _authHeader(),
       );
-      return DiaryEntry.fromJson(res.data['data'] as Map<String, dynamic>);
+      return DiaryLogResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -317,18 +327,20 @@ class ApiService {
           'page': page,
         },
       );
-      final list = res.data['data']['products'] as List? ?? res.data['data'] as List? ?? [];
+      final list = res.data['data']['products'] as List? ?? [];
       return list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
   }
 
-  Future<List<String>> getProductCategories() async {
+  Future<List<ProductCategory>> getProductCategories() async {
     try {
       final res = await _dio.get('$baseUrl/api/products/categories');
-      final list = res.data['data'] as List? ?? [];
-      return list.map((e) => e.toString()).toList();
+      final list = res.data['data']['categories'] as List? ?? [];
+      return list
+          .map((e) => ProductCategory.fromJson(e as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -348,17 +360,8 @@ class ApiService {
           'limit': limit,
         },
       );
-      final list = res.data['data'] as List? ?? [];
+      final list = res.data['data']['leaderboard'] as List? ?? [];
       return list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
-    } on DioException catch (e) {
-      throw ApiException(_parseError(e));
-    }
-  }
-
-  Future<Product> getProductByBarcode(String barcode) async {
-    try {
-      final res = await _dio.get('$baseUrl/api/products/barcode/$barcode');
-      return Product.fromJson(res.data['data'] as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
@@ -379,6 +382,27 @@ class ApiService {
     }
   }
 
+  /// Bandingkan 2-3 foto label langsung — tiap foto di-scan AI di server.
+  Future<CompareResult> compareByPhotos(List<File> photos) async {
+    try {
+      final form = FormData();
+      for (final f in photos) {
+        form.files.add(MapEntry(
+          'photos',
+          await MultipartFile.fromFile(f.path, filename: 'photo.jpg'),
+        ));
+      }
+      final res = await _dio.post(
+        '$baseUrl/api/compare/photos',
+        data: form,
+        options: AuthService().isLoggedIn ? _authHeader() : null,
+      );
+      return CompareResult.fromJson(res.data);
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
   // ── Edukasi & Gamifikasi ──────────────────────────────────────────────────
 
   Future<List<QuizQuestion>> getQuiz({int count = 5}) async {
@@ -388,7 +412,7 @@ class ApiService {
         queryParameters: {'count': count},
         options: AuthService().isLoggedIn ? _authHeader() : null,
       );
-      final list = res.data['data'] as List? ?? [];
+      final list = res.data['data']['questions'] as List? ?? [];
       return list.map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
@@ -398,8 +422,8 @@ class ApiService {
   Future<QuizAnswer> answerQuiz(String questionId, int answerIndex) async {
     try {
       final res = await _dio.post(
-        '$baseUrl/api/edu/quiz/$questionId/answer',
-        data: {'answerIndex': answerIndex},
+        '$baseUrl/api/edu/quiz/answer',
+        data: {'questionId': questionId, 'answerIndex': answerIndex},
         options: AuthService().isLoggedIn ? _authHeader() : null,
       );
       return QuizAnswer.fromJson(res.data);
@@ -414,7 +438,7 @@ class ApiService {
         '$baseUrl/api/edu/tips',
         queryParameters: category != null ? {'category': category} : null,
       );
-      final list = res.data['data'] as List? ?? [];
+      final list = res.data['data']['tips'] as List? ?? [];
       return list.map((e) => Tip.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
@@ -432,14 +456,51 @@ class ApiService {
 
   // ── Laporan Mingguan ──────────────────────────────────────────────────────
 
-  Future<WeeklyReport> getWeeklyReport({String? startDate}) async {
+  Future<WeeklyReport> getWeeklyReport({String? startDate, String? profileId}) async {
     try {
+      final params = <String, dynamic>{};
+      if (startDate != null) params['start'] = startDate;
+      if (profileId != null) params['profileId'] = profileId;
       final res = await _dio.get(
         '$baseUrl/api/reports/weekly',
-        queryParameters: startDate != null ? {'start': startDate} : null,
+        queryParameters: params.isNotEmpty ? params : null,
         options: _authHeader(),
       );
       return WeeklyReport.fromJson(res.data);
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
+  // ── Chat Asisten Gizi ─────────────────────────────────────────────────────
+
+  Future<ChatMessage> sendChatMessage(List<ChatMessage> messages, {String? profileId}) async {
+    try {
+      final body = <String, dynamic>{
+        'messages': messages.map((m) => m.toJson()).toList(),
+        if (profileId != null) 'profileId': profileId,
+      };
+      final res = await _dio.post(
+        '$baseUrl/api/chat/message',
+        data: body,
+        options: _authHeader(),
+      );
+      return ChatMessage.fromJson(res.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
+  // ── Prediksi Risiko Kesehatan ─────────────────────────────────────────────
+
+  Future<HealthRiskReport> getHealthRisk({String? profileId}) async {
+    try {
+      final res = await _dio.get(
+        '$baseUrl/api/health/risk',
+        queryParameters: profileId != null ? {'profileId': profileId} : null,
+        options: _authHeader(),
+      );
+      return HealthRiskReport.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }

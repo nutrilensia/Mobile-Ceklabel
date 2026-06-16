@@ -1,7 +1,10 @@
+import 'gamification.dart';
+
 class ScanResult {
   final String? id;
   final String productName;
   final String servingSize;
+  final String category;
   final NutriScore nutriScore;
   final Nutrition nutrition;
   final ScoreBreakdown scoreBreakdown;
@@ -11,10 +14,23 @@ class ScanResult {
   final String notes;
   final bool savedToHistory;
 
+  // Fitur dasar
+  final String? photoUrl;
+  final String? productId;
+  final IngredientInfo? ingredients;
+  final List<ProfileInsight> familyInsights;
+  final GamificationUpdate? gamification;
+
+  // Fitur inovatif baru
+  final List<MisleadingClaim> misleadingClaims;
+  final DailyBudget? dailyBudget;
+  final List<AlternativeProduct> alternatives;
+
   ScanResult({
     this.id,
     required this.productName,
     required this.servingSize,
+    this.category = '',
     required this.nutriScore,
     required this.nutrition,
     required this.scoreBreakdown,
@@ -23,6 +39,14 @@ class ScanResult {
     required this.confidence,
     required this.notes,
     required this.savedToHistory,
+    this.photoUrl,
+    this.productId,
+    this.ingredients,
+    this.familyInsights = const [],
+    this.gamification,
+    this.misleadingClaims = const [],
+    this.dailyBudget,
+    this.alternatives = const [],
   });
 
   factory ScanResult.fromJson(Map<String, dynamic> json) {
@@ -30,6 +54,7 @@ class ScanResult {
       id: json['id']?.toString() ?? json['scanId']?.toString(),
       productName: json['productName']?.toString() ?? '',
       servingSize: json['servingSize']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
       nutriScore: NutriScore.fromJson(json['nutriScore'] ?? {}),
       nutrition: Nutrition.fromJson(json['nutrition'] ?? {}),
       scoreBreakdown: ScoreBreakdown.fromJson(json['scoreBreakdown'] ?? {}),
@@ -38,6 +63,26 @@ class ScanResult {
       confidence: (json['confidence'] ?? 0).toDouble(),
       notes: json['notes']?.toString() ?? '',
       savedToHistory: json['savedToHistory'] ?? false,
+      photoUrl: json['photoUrl']?.toString(),
+      productId: json['productId']?.toString(),
+      ingredients: json['ingredients'] != null
+          ? IngredientInfo.fromJson(json['ingredients'] as Map<String, dynamic>)
+          : null,
+      familyInsights: (json['familyInsights'] as List? ?? [])
+          .map((e) => ProfileInsight.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      gamification: json['gamification'] != null
+          ? GamificationUpdate.fromJson(json['gamification'] as Map<String, dynamic>)
+          : null,
+      misleadingClaims: (json['misleadingClaims'] as List? ?? [])
+          .map((e) => MisleadingClaim.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      dailyBudget: json['dailyBudget'] != null
+          ? DailyBudget.fromJson(json['dailyBudget'] as Map<String, dynamic>)
+          : null,
+      alternatives: (json['alternatives'] as List? ?? [])
+          .map((e) => AlternativeProduct.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -45,10 +90,18 @@ class ScanResult {
     final raw = json['rawNutrition'] as Map<String, dynamic>? ?? {};
     final score = json['scoreDetails'] as Map<String, dynamic>? ?? {};
     final analogies = json['aiAnalogies'] as Map<String, dynamic>? ?? {};
+    final additives = (json['additives'] as List? ?? [])
+        .map((e) => DetectedAdditive.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final allergens = (json['allergens'] as List? ?? [])
+        .map((e) => DetectedAllergen.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final ingredientsRaw = json['ingredientsRaw']?.toString();
     return ScanResult(
       id: json['id']?.toString() ?? json['_id']?.toString(),
       productName: json['productName']?.toString() ?? '',
       servingSize: raw['servingSize']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
       nutriScore: NutriScore(
         grade: json['nutriScore']?.toString() ?? '',
         label: json['nutriScoreLabel']?.toString() ?? '',
@@ -86,12 +139,25 @@ class ScanResult {
       confidence: double.tryParse(json['aiConfidence']?.toString() ?? '0') ?? 0,
       notes: '',
       savedToHistory: true,
+      photoUrl: json['photoUrl']?.toString(),
+      productId: json['productId']?.toString(),
+      ingredients: (additives.isNotEmpty ||
+              allergens.isNotEmpty ||
+              (ingredientsRaw != null && ingredientsRaw.isNotEmpty))
+          ? IngredientInfo(
+              raw: ingredientsRaw,
+              additives: additives,
+              allergens: allergens,
+              warnings: const [],
+            )
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'productName': productName,
     'servingSize': servingSize,
+    'category': category,
     'nutriScore': nutriScore.toJson(),
     'nutrition': nutrition.toJson(),
     'scoreBreakdown': scoreBreakdown.toJson(),
@@ -273,4 +339,217 @@ class Analogies {
     'sodium': sodium,
     'calories': calories,
   };
+}
+
+// ── Komposisi & alergen ──────────────────────────────────────────────────────
+
+class DetectedAdditive {
+  final String name;
+  final String type; // sweetener | msg | preservative | coloring | trans_fat
+  final String label;
+  final String matchedTerm;
+
+  DetectedAdditive({
+    required this.name,
+    required this.type,
+    required this.label,
+    required this.matchedTerm,
+  });
+
+  factory DetectedAdditive.fromJson(Map<String, dynamic> json) => DetectedAdditive(
+        name: json['name']?.toString() ?? '',
+        type: json['type']?.toString() ?? '',
+        label: json['label']?.toString() ?? '',
+        matchedTerm: json['matchedTerm']?.toString() ?? '',
+      );
+}
+
+class DetectedAllergen {
+  final String allergen;
+  final String label;
+  final String matchedTerm;
+
+  DetectedAllergen({
+    required this.allergen,
+    required this.label,
+    required this.matchedTerm,
+  });
+
+  factory DetectedAllergen.fromJson(Map<String, dynamic> json) => DetectedAllergen(
+        allergen: json['allergen']?.toString() ?? '',
+        label: json['label']?.toString() ?? '',
+        matchedTerm: json['matchedTerm']?.toString() ?? '',
+      );
+}
+
+class IngredientInfo {
+  final String? raw;
+  final List<DetectedAdditive> additives;
+  final List<DetectedAllergen> allergens;
+  final List<String> warnings;
+
+  IngredientInfo({
+    this.raw,
+    this.additives = const [],
+    this.allergens = const [],
+    this.warnings = const [],
+  });
+
+  bool get isEmpty =>
+      (raw == null || raw!.isEmpty) &&
+      additives.isEmpty &&
+      allergens.isEmpty &&
+      warnings.isEmpty;
+
+  factory IngredientInfo.fromJson(Map<String, dynamic> json) => IngredientInfo(
+        raw: json['raw']?.toString(),
+        additives: (json['additives'] as List? ?? [])
+            .map((e) => DetectedAdditive.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        allergens: (json['allergens'] as List? ?? [])
+            .map((e) => DetectedAllergen.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        warnings: List<String>.from(json['warnings'] ?? []),
+      );
+}
+
+// ── Interpretasi per anggota keluarga ────────────────────────────────────────
+
+class InsightFlag {
+  final String severity; // info | caution | danger
+  final String message;
+
+  InsightFlag({required this.severity, required this.message});
+
+  factory InsightFlag.fromJson(Map<String, dynamic> json) => InsightFlag(
+        severity: json['severity']?.toString() ?? 'info',
+        message: json['message']?.toString() ?? '',
+      );
+}
+
+class ProfileInsight {
+  final String? profileId;
+  final String profileName;
+  final String ageGroup;
+  final List<InsightFlag> flags;
+
+  ProfileInsight({
+    this.profileId,
+    required this.profileName,
+    required this.ageGroup,
+    required this.flags,
+  });
+
+  factory ProfileInsight.fromJson(Map<String, dynamic> json) => ProfileInsight(
+        profileId: json['profileId']?.toString(),
+        profileName: json['profileName']?.toString() ?? '',
+        ageGroup: json['ageGroup']?.toString() ?? 'adult',
+        flags: (json['flags'] as List? ?? [])
+            .map((e) => InsightFlag.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  bool get hasDanger => flags.any((f) => f.severity == 'danger');
+}
+
+// ── Label Detective: klaim pemasaran yang menyesatkan ────────────────────────
+
+class MisleadingClaim {
+  final String claim;
+  final String issue;
+  final String severity; // info | caution | warning
+
+  MisleadingClaim({
+    required this.claim,
+    required this.issue,
+    required this.severity,
+  });
+
+  factory MisleadingClaim.fromJson(Map<String, dynamic> json) => MisleadingClaim(
+        claim: json['claim']?.toString() ?? '',
+        issue: json['issue']?.toString() ?? '',
+        severity: json['severity']?.toString() ?? 'caution',
+      );
+}
+
+// ── Budget Harian ─────────────────────────────────────────────────────────────
+
+class DailyBudgetNutrient {
+  final double usedToday;
+  final double addedByThis;
+  final double afterEating;
+  final double limit;
+  final int pctBefore;
+  final int pctAfter;
+
+  DailyBudgetNutrient({
+    required this.usedToday,
+    required this.addedByThis,
+    required this.afterEating,
+    required this.limit,
+    required this.pctBefore,
+    required this.pctAfter,
+  });
+
+  factory DailyBudgetNutrient.fromJson(Map<String, dynamic> json) => DailyBudgetNutrient(
+        usedToday: (json['usedToday'] ?? 0).toDouble(),
+        addedByThis: (json['addedByThis'] ?? 0).toDouble(),
+        afterEating: (json['afterEating'] ?? 0).toDouble(),
+        limit: (json['limit'] ?? 0).toDouble(),
+        pctBefore: (json['pctBefore'] ?? 0).toInt(),
+        pctAfter: (json['pctAfter'] ?? 0).toInt(),
+      );
+}
+
+class DailyBudget {
+  final DailyBudgetNutrient calories;
+  final DailyBudgetNutrient sugar;
+  final DailyBudgetNutrient sodium;
+  final DailyBudgetNutrient fatTotal;
+  final List<String> alerts;
+
+  DailyBudget({
+    required this.calories,
+    required this.sugar,
+    required this.sodium,
+    required this.fatTotal,
+    required this.alerts,
+  });
+
+  factory DailyBudget.fromJson(Map<String, dynamic> json) => DailyBudget(
+        calories: DailyBudgetNutrient.fromJson(json['calories'] as Map<String, dynamic>? ?? {}),
+        sugar: DailyBudgetNutrient.fromJson(json['sugar'] as Map<String, dynamic>? ?? {}),
+        sodium: DailyBudgetNutrient.fromJson(json['sodium'] as Map<String, dynamic>? ?? {}),
+        fatTotal: DailyBudgetNutrient.fromJson(json['fatTotal'] as Map<String, dynamic>? ?? {}),
+        alerts: List<String>.from(json['alerts'] ?? []),
+      );
+}
+
+// ── Alternatif Lebih Sehat ────────────────────────────────────────────────────
+
+class AlternativeProduct {
+  final String id;
+  final String name;
+  final String? brand;
+  final String nutriScore;
+  final int finalScore;
+  final int scanCount;
+
+  AlternativeProduct({
+    required this.id,
+    required this.name,
+    this.brand,
+    required this.nutriScore,
+    required this.finalScore,
+    required this.scanCount,
+  });
+
+  factory AlternativeProduct.fromJson(Map<String, dynamic> json) => AlternativeProduct(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        brand: json['brand']?.toString(),
+        nutriScore: json['nutriScore']?.toString() ?? '',
+        finalScore: (json['finalScore'] ?? 0).toInt(),
+        scanCount: (json['scanCount'] ?? 0).toInt(),
+      );
 }

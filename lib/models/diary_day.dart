@@ -1,96 +1,147 @@
-class DiaryEntry {
+import 'scan_result.dart';
+import 'gamification.dart';
+
+/// Status satu nutrien terhadap batas harian AKG.
+class IntakeStatus {
+  final num consumed;
+  final num limit;
+  final int percentage;
+  final String level; // ok | caution | warning | exceeded
+  final String? message;
+
+  IntakeStatus({
+    required this.consumed,
+    required this.limit,
+    required this.percentage,
+    required this.level,
+    this.message,
+  });
+
+  factory IntakeStatus.fromJson(Map<String, dynamic> json) => IntakeStatus(
+        consumed: json['consumed'] ?? 0,
+        limit: json['limit'] ?? 0,
+        percentage: (json['percentage'] ?? 0).toInt(),
+        level: json['level']?.toString() ?? 'ok',
+        message: json['message']?.toString(),
+      );
+
+  double get ratio => limit > 0 ? (consumed / limit).toDouble() : 0;
+  bool get isOver => level == 'exceeded';
+}
+
+class DiaryEntryItem {
   final String id;
   final String? scanId;
   final String? productId;
-  final double servings;
-  final String date;
   final String productName;
   final String nutriScore;
-  final String nutriScoreColor;
-  final num calories;
-  final num sugarG;
-  final num sodiumMg;
-  final num fatG;
+  final double servings;
+  final Nutrition nutrition;
+  final DateTime consumedAt;
+  final String consumedDate;
 
-  DiaryEntry({
+  DiaryEntryItem({
     required this.id,
     this.scanId,
     this.productId,
-    required this.servings,
-    required this.date,
     required this.productName,
     required this.nutriScore,
-    required this.nutriScoreColor,
-    required this.calories,
-    required this.sugarG,
-    required this.sodiumMg,
-    required this.fatG,
+    required this.servings,
+    required this.nutrition,
+    required this.consumedAt,
+    required this.consumedDate,
   });
 
-  factory DiaryEntry.fromJson(Map<String, dynamic> json) {
-    final product = json['product'] as Map<String, dynamic>? ?? {};
-    final nutrition = json['nutrition'] as Map<String, dynamic>? ?? product;
-    return DiaryEntry(
+  factory DiaryEntryItem.fromJson(Map<String, dynamic> json) {
+    return DiaryEntryItem(
       id: json['id']?.toString() ?? '',
       scanId: json['scanId']?.toString(),
       productId: json['productId']?.toString(),
-      servings: (json['servings'] ?? 1).toDouble(),
-      date: json['date']?.toString() ?? '',
-      productName: product['name']?.toString() ?? json['productName']?.toString() ?? 'Produk',
-      nutriScore: product['nutriScore']?.toString() ?? json['nutriScore']?.toString() ?? '',
-      nutriScoreColor: product['nutriScoreColor']?.toString() ?? '#888888',
-      calories: nutrition['calories'] ?? 0,
-      sugarG: nutrition['sugarG'] ?? nutrition['sugar'] ?? 0,
-      sodiumMg: nutrition['sodiumMg'] ?? nutrition['sodium'] ?? 0,
-      fatG: nutrition['fatG'] ?? nutrition['fat'] ?? 0,
+      productName: json['productName']?.toString() ?? 'Produk',
+      nutriScore: json['nutriScore']?.toString() ?? '',
+      servings: double.tryParse(json['servings']?.toString() ?? '1') ?? 1,
+      nutrition:
+          Nutrition.fromJson(json['nutritionPerServing'] as Map<String, dynamic>? ?? {}),
+      consumedAt:
+          (DateTime.tryParse(json['consumedAt']?.toString() ?? '') ?? DateTime.now())
+              .toLocal(),
+      consumedDate: json['consumedDate']?.toString() ?? '',
     );
   }
+
+  num get totalCalories => nutrition.calories * servings;
+  num get totalSugar => nutrition.sugarG * servings;
+  num get totalSodium => nutrition.sodiumMg * servings;
 }
 
 class DiaryDay {
   final String date;
-  final List<DiaryEntry> entries;
-  final Map<String, num> totals;
-  final Map<String, num> limits;
+  final String profileName;
+  final int entryCount;
+  final Map<String, IntakeStatus> intake;
   final List<String> warnings;
+  final Map<String, num> limits;
+  final List<DiaryEntryItem> entries;
 
   DiaryDay({
     required this.date,
-    required this.entries,
-    required this.totals,
-    required this.limits,
+    required this.profileName,
+    required this.entryCount,
+    required this.intake,
     required this.warnings,
+    required this.limits,
+    required this.entries,
   });
 
   factory DiaryDay.fromJson(Map<String, dynamic> json) {
-    final totals = Map<String, num>.from(json['totals'] ?? {});
-    final limits = Map<String, num>.from(json['limits'] ?? {});
+    final intakeRaw = json['intake'] as Map<String, dynamic>? ?? {};
+    final intake = <String, IntakeStatus>{};
+    for (final key in ['calories', 'sugar', 'sodium', 'fatTotal', 'fatSaturated']) {
+      if (intakeRaw[key] is Map) {
+        intake[key] = IntakeStatus.fromJson(intakeRaw[key] as Map<String, dynamic>);
+      }
+    }
     return DiaryDay(
       date: json['date']?.toString() ?? '',
+      profileName: json['profileName']?.toString() ?? 'Saya',
+      entryCount: (json['entryCount'] ?? 0).toInt(),
+      intake: intake,
+      warnings: List<String>.from(intakeRaw['warnings'] ?? json['warnings'] ?? []),
+      limits: (json['limits'] as Map<String, dynamic>? ?? {})
+          .map((k, v) => MapEntry(k, (v ?? 0) as num)),
       entries: (json['entries'] as List? ?? [])
-          .map((e) => DiaryEntry.fromJson(e as Map<String, dynamic>))
+          .map((e) => DiaryEntryItem.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totals: totals,
-      limits: limits,
-      warnings: List<String>.from(json['warnings'] ?? []),
     );
   }
 
-  double get caloriesProgress {
-    final limit = limits['calories']?.toDouble() ?? 2000;
-    final total = totals['calories']?.toDouble() ?? 0;
-    return limit > 0 ? (total / limit).clamp(0.0, 1.0) : 0;
-  }
+  IntakeStatus? get calories => intake['calories'];
+  IntakeStatus? get sugar => intake['sugar'];
+  IntakeStatus? get sodium => intake['sodium'];
+  IntakeStatus? get fatTotal => intake['fatTotal'];
+  IntakeStatus? get fatSaturated => intake['fatSaturated'];
+}
 
-  double get sugarProgress {
-    final limit = limits['sugar']?.toDouble() ?? 50;
-    final total = totals['sugar']?.toDouble() ?? 0;
-    return limit > 0 ? (total / limit).clamp(0.0, 1.0) : 0;
-  }
+/// Hasil logging satu entri ke diary.
+class DiaryLogResult {
+  final String message;
+  final DiaryDay summary;
+  final GamificationUpdate? gamification;
 
-  double get sodiumProgress {
-    final limit = limits['sodium']?.toDouble() ?? 2000;
-    final total = totals['sodium']?.toDouble() ?? 0;
-    return limit > 0 ? (total / limit).clamp(0.0, 1.0) : 0;
+  DiaryLogResult({
+    required this.message,
+    required this.summary,
+    this.gamification,
+  });
+
+  factory DiaryLogResult.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+    return DiaryLogResult(
+      message: json['message']?.toString() ?? 'Tercatat ke Diary',
+      summary: DiaryDay.fromJson(data['summary'] as Map<String, dynamic>? ?? {}),
+      gamification: data['gamification'] != null
+          ? GamificationUpdate.fromJson(data['gamification'] as Map<String, dynamic>)
+          : null,
+    );
   }
 }

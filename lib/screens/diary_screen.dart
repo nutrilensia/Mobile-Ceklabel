@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/history_item.dart';
+import '../models/diary_day.dart';
+import '../models/family_profile.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
@@ -13,52 +14,35 @@ class DiaryScreen extends StatefulWidget {
 
 class _DiaryScreenState extends State<DiaryScreen> {
   DateTime _selectedDate = DateTime.now();
-  late Future<List<HistoryItem>> _future;
-
-  static const double _calTarget = 2000;
-  static const double _sugarTarget = 50;
-  static const double _sodiumTarget = 2000;
+  FamilyProfile? _profile;
+  List<FamilyProfile> _profiles = [];
+  Future<DiaryDay>? _future;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
-  }
-
-  void _loadHistory() {
-    setState(() {
-      _future = ApiService().getHistory(limit: 200);
-    });
-  }
-
-  List<HistoryItem> _filterByDate(List<HistoryItem> all) {
-    return all.where((item) =>
-      item.scannedAt.year == _selectedDate.year &&
-      item.scannedAt.month == _selectedDate.month &&
-      item.scannedAt.day == _selectedDate.day
-    ).toList()
-      ..sort((a, b) => b.scannedAt.compareTo(a.scannedAt));
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2024),
-      lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF4ECDC4),
-            surface: Color(0xFF1A1A2E),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null && mounted) {
-      setState(() => _selectedDate = picked);
+    if (AuthService().isLoggedIn) {
+      _loadProfiles();
+      _reload();
     }
+  }
+
+  String get _dateStr {
+    final d = _selectedDate;
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _loadProfiles() async {
+    try {
+      final p = await ApiService().getFamilyProfiles();
+      if (mounted) setState(() => _profiles = p);
+    } catch (_) {}
+  }
+
+  void _reload() {
+    setState(() {
+      _future = ApiService().getDiary(date: _dateStr, profileId: _profile?.id);
+    });
   }
 
   bool get _isToday {
@@ -72,6 +56,27 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final next = _selectedDate.add(Duration(days: delta));
     if (next.isAfter(DateTime.now())) return;
     setState(() => _selectedDate = next);
+    _reload();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now(),
+      builder: (context, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF4ECDC4), surface: Color(0xFF1A1A2E)),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() => _selectedDate = picked);
+      _reload();
+    }
   }
 
   @override
@@ -81,42 +86,110 @@ class _DiaryScreenState extends State<DiaryScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0F),
         foregroundColor: Colors.white,
-        title: Text(
-          'Diary Gizi',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17),
-        ),
+        title: Text('Diary Gizi',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17)),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadHistory,
-            tooltip: 'Refresh',
-          ),
+          if (AuthService().isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _reload,
+              tooltip: 'Refresh',
+            ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildDateSelector(),
-          const SizedBox(height: 4),
-          Expanded(
-            child: AuthService().isLoggedIn
-                ? _buildContent()
-                : _buildLoginPrompt(),
+      body: AuthService().isLoggedIn ? _buildBody() : _buildLoginPrompt(),
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      children: [
+        if (_profiles.isNotEmpty) _buildProfileSelector(),
+        _buildDateSelector(),
+        const SizedBox(height: 4),
+        Expanded(
+          child: FutureBuilder<DiaryDay>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF4ECDC4)));
+              }
+              if (snap.hasError) return _buildError(snap.error.toString());
+              final day = snap.data;
+              if (day == null) return const SizedBox();
+              return _buildDayView(day);
+            },
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileSelector() {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+        children: [
+          _profileChip('Saya', _profile == null, () {
+            setState(() => _profile = null);
+            _reload();
+          }),
+          ..._profiles.map((p) => _profileChip(p.name, _profile?.id == p.id, () {
+                setState(() => _profile = p);
+                _reload();
+              })),
         ],
       ),
     );
   }
 
+  Widget _profileChip(String name, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: selected
+                  ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(selected ? Icons.person_rounded : Icons.person_outline_rounded,
+                size: 14,
+                color: selected ? const Color(0xFF4ECDC4) : Colors.white38),
+            const SizedBox(width: 6),
+            Text(name,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: selected ? const Color(0xFF4ECDC4) : Colors.white60,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDateSelector() {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
         'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     final formatted =
         '${_selectedDate.day} ${months[_selectedDate.month - 1]} ${_selectedDate.year}';
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
@@ -134,27 +207,22 @@ class _DiaryScreenState extends State<DiaryScreen> {
               onTap: _pickDate,
               child: Column(
                 children: [
-                  Text(
-                    _isToday ? 'Hari Ini' : 'Tanggal Dipilih',
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
-                  ),
+                  Text(_isToday ? 'Hari Ini' : 'Tanggal Dipilih',
+                      style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
                   const SizedBox(height: 2),
-                  Text(
-                    formatted,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
-                    ),
-                  ),
+                  Text(formatted,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
                 ],
               ),
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.chevron_right_rounded,
-              color: _isToday ? Colors.white12 : Colors.white54,
-            ),
+            icon: Icon(Icons.chevron_right_rounded,
+                color: _isToday ? Colors.white12 : Colors.white54),
             onPressed: _isToday ? null : () => _changeDay(1),
             splashRadius: 20,
           ),
@@ -163,52 +231,40 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  Widget _buildContent() {
-    return FutureBuilder<List<HistoryItem>>(
-      future: _future,
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4ECDC4)));
-        }
-        if (snap.hasError) {
-          return _buildError(snap.error.toString());
-        }
-        final dayItems = _filterByDate(snap.data ?? []);
-        return dayItems.isEmpty ? _buildEmpty() : _buildDayView(dayItems);
-      },
-    );
-  }
-
-  Widget _buildDayView(List<HistoryItem> items) {
-    final totalCal = items.fold(0.0, (s, i) => s + i.calories);
-    final totalSugar = items.fold(0.0, (s, i) => s + i.sugarG);
-    final totalSodium = items.fold(0.0, (s, i) => s + i.sodiumMg);
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-      children: [
-        _buildNutritionSummary(totalCal, totalSugar, totalSodium),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            const Icon(Icons.fastfood_rounded, size: 16, color: Color(0xFF4ECDC4)),
-            const SizedBox(width: 8),
-            Text(
-              '${items.length} produk dipindai',
-              style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
-              ),
-            ),
+  Widget _buildDayView(DiaryDay day) {
+    return RefreshIndicator(
+      color: const Color(0xFF4ECDC4),
+      backgroundColor: const Color(0xFF1A1A2E),
+      onRefresh: () async => _reload(),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        children: [
+          _buildIntakeSummary(day),
+          if (day.warnings.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            ...day.warnings.map(_buildWarningBanner),
           ],
-        ),
-        const SizedBox(height: 12),
-        ...items.map(_buildItemCard),
-      ],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Icon(Icons.restaurant_rounded, size: 16, color: Color(0xFF4ECDC4)),
+              const SizedBox(width: 8),
+              Text('${day.entryCount} item dikonsumsi',
+                  style: GoogleFonts.poppins(
+                      fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (day.entries.isEmpty)
+            _buildEmptyEntries()
+          else
+            ...day.entries.map(_buildEntryCard),
+        ],
+      ),
     );
   }
 
-  Widget _buildNutritionSummary(double cal, double sugar, double sodium) {
+  Widget _buildIntakeSummary(DiaryDay day) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -227,59 +283,54 @@ class _DiaryScreenState extends State<DiaryScreen> {
             children: [
               const Icon(Icons.bar_chart_rounded, size: 18, color: Color(0xFF4ECDC4)),
               const SizedBox(width: 8),
-              Text(
-                'Ringkasan Nutrisi',
-                style: GoogleFonts.poppins(
-                  fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
-                ),
-              ),
+              Text('Asupan ${day.profileName}',
+                  style: GoogleFonts.poppins(
+                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
             ],
           ),
           const SizedBox(height: 16),
-          _buildNutrientRow('Kalori', cal, _calTarget, 'kkal', const Color(0xFFFF6B6B)),
+          _intakeRow('Kalori', day.calories, 'kkal', const Color(0xFFFF6B6B)),
           const SizedBox(height: 14),
-          _buildNutrientRow('Gula', sugar, _sugarTarget, 'g', const Color(0xFFFFAD00)),
+          _intakeRow('Gula', day.sugar, 'g', const Color(0xFFFFAD00)),
           const SizedBox(height: 14),
-          _buildNutrientRow('Sodium', sodium, _sodiumTarget, 'mg', const Color(0xFF4ECDC4)),
+          _intakeRow('Natrium', day.sodium, 'mg', const Color(0xFF4ECDC4)),
+          const SizedBox(height: 14),
+          _intakeRow('Lemak jenuh', day.fatSaturated, 'g', const Color(0xFFAD7BFF)),
           const SizedBox(height: 8),
-          Text(
-            'Berdasarkan kebutuhan harian dewasa (AKG)',
-            style: GoogleFonts.inter(fontSize: 10, color: Colors.white24),
-          ),
+          Text('Batas berdasarkan AKG BPOM untuk profil ini',
+              style: GoogleFonts.inter(fontSize: 10, color: Colors.white24)),
         ],
       ),
     );
   }
 
-  Widget _buildNutrientRow(
-      String label, double value, double target, String unit, Color color) {
-    final ratio = (value / target).clamp(0.0, 1.0);
-    final pct = (ratio * 100).round();
-    final isOver = ratio >= 1.0;
+  Widget _intakeRow(String label, IntakeStatus? s, String unit, Color color) {
+    final consumed = s?.consumed ?? 0;
+    final limit = s?.limit ?? 0;
+    final ratio = (s?.ratio ?? 0).clamp(0.0, 1.0);
+    final pct = s?.percentage ?? 0;
+    final over = s?.isOver ?? false;
+    final c = over ? const Color(0xFFFF6B6B) : color;
 
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white70)),
+            Text(label, style: GoogleFonts.inter(fontSize: 13, color: Colors.white70)),
             Row(
               children: [
-                if (isOver)
+                if (over)
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
                     child: Icon(Icons.warning_amber_rounded,
                         size: 12, color: Color(0xFFFF6B6B)),
                   ),
-                Text(
-                  '${value.round()} / ${target.round()} $unit',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: isOver ? const Color(0xFFFF6B6B) : Colors.white54,
-                    fontWeight: isOver ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
+                Text('${consumed.round()} / ${limit.round()} $unit',
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: over ? const Color(0xFFFF6B6B) : Colors.white54,
+                        fontWeight: over ? FontWeight.w600 : FontWeight.normal)),
               ],
             ),
           ],
@@ -293,25 +344,18 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 child: LinearProgressIndicator(
                   value: ratio,
                   backgroundColor: Colors.white.withValues(alpha: 0.08),
-                  valueColor: AlwaysStoppedAnimation(
-                    isOver ? const Color(0xFFFF6B6B) : color,
-                  ),
+                  valueColor: AlwaysStoppedAnimation(c),
                   minHeight: 7,
                 ),
               ),
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: 36,
-              child: Text(
-                '$pct%',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: isOver ? const Color(0xFFFF6B6B) : color,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              width: 40,
+              child: Text('$pct%',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(
+                      fontSize: 11, color: c, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -319,119 +363,165 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  Widget _buildItemCard(HistoryItem item) {
-    Color gradeColor;
-    try {
-      gradeColor =
-          Color(int.parse(item.gradeColor.replaceFirst('#', '0xFF')));
-    } catch (_) {
-      gradeColor = Colors.grey;
-    }
-    final timeStr =
-        '${item.scannedAt.hour.toString().padLeft(2, '0')}:${item.scannedAt.minute.toString().padLeft(2, '0')}';
-
+  Widget _buildWarningBanner(String warning) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        color: const Color(0xFFFF6B6B).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.25)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 42, height: 42,
-            decoration: BoxDecoration(
-              color: gradeColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              item.grade.isNotEmpty ? item.grade : '?',
-              style: GoogleFonts.poppins(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: gradeColor,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  _nutritionLabel(item),
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
-                ),
-              ],
-            ),
-          ),
+          const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFFF6B6B)),
           const SizedBox(width: 8),
-          Text(
-            timeStr,
-            style: GoogleFonts.inter(fontSize: 11, color: Colors.white30),
+          Expanded(
+            child: Text(warning,
+                style: GoogleFonts.inter(
+                    fontSize: 12, color: const Color(0xFFFF6B6B), height: 1.4)),
           ),
         ],
       ),
     );
   }
 
-  String _nutritionLabel(HistoryItem item) {
-    final parts = <String>[];
-    if (item.calories > 0) parts.add('${item.calories.round()} kkal');
-    if (item.sugarG > 0) parts.add('Gula ${item.sugarG.round()}g');
-    if (item.sodiumMg > 0) parts.add('Na ${item.sodiumMg.round()}mg');
-    return parts.isEmpty ? 'Data nutrisi tidak tersedia' : parts.join(' • ');
-  }
+  Widget _buildEntryCard(DiaryEntryItem item) {
+    Color gradeColor;
+    switch (item.nutriScore.toUpperCase()) {
+      case 'A': gradeColor = const Color(0xFF1E8F4E); break;
+      case 'B': gradeColor = const Color(0xFF6DB33F); break;
+      case 'C': gradeColor = const Color(0xFFFFAD00); break;
+      case 'D': gradeColor = const Color(0xFFEF7D00); break;
+      case 'E': gradeColor = const Color(0xFFE63312); break;
+      default: gradeColor = Colors.grey;
+    }
+    final time =
+        '${item.consumedAt.hour.toString().padLeft(2, '0')}:${item.consumedAt.minute.toString().padLeft(2, '0')}';
 
-  Widget _buildEmpty() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(36),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Dismissible(
+      key: ValueKey(item.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF6B6B).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFFF6B6B)),
+      ),
+      confirmDismiss: (_) => _confirmDelete(item),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        ),
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF4ECDC4).withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+                color: gradeColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
               ),
-              child: const Icon(Icons.no_food_rounded,
-                  size: 48, color: Color(0xFF4ECDC4)),
+              alignment: Alignment.center,
+              child: Text(item.nutriScore.isNotEmpty ? item.nutriScore : '?',
+                  style: GoogleFonts.poppins(
+                      fontSize: 17, fontWeight: FontWeight.bold, color: gradeColor)),
             ),
-            const SizedBox(height: 20),
-            Text(
-              _isToday ? 'Belum ada scan hari ini' : 'Tidak ada scan di tanggal ini',
-              style: GoogleFonts.poppins(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.productName,
+                      style: GoogleFonts.inter(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${item.servings == item.servings.toInt() ? item.servings.toInt() : item.servings} porsi • '
+                    '${item.totalCalories.round()} kkal • Gula ${item.totalSugar.round()}g',
+                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _isToday
-                  ? 'Scan produk makanan dan hasilnya\notomatis masuk ke diary harian ini'
-                  : 'Semua produk yang kamu scan di\ntanggal ini akan tampil di sini',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                  fontSize: 13, color: Colors.white38, height: 1.5),
-            ),
+            const SizedBox(width: 8),
+            Text(time, style: GoogleFonts.inter(fontSize: 11, color: Colors.white30)),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmDelete(DiaryEntryItem item) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: Text('Hapus dari diary?',
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+        content: Text('${item.productName} akan dihapus dari catatan hari ini.',
+            style: GoogleFonts.inter(color: Colors.white60)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus', style: TextStyle(color: Color(0xFFFF6B6B))),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      try {
+        await ApiService().deleteDiaryEntry(item.id);
+        _reload();
+        return true;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFFF6B6B)),
+          );
+        }
+      }
+    }
+    return false;
+  }
+
+  Widget _buildEmptyEntries() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.no_meals_rounded, size: 40, color: Colors.white24),
+          const SizedBox(height: 12),
+          Text(_isToday ? 'Belum ada yang dicatat hari ini' : 'Tidak ada catatan',
+              style: GoogleFonts.inter(
+                  fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white54)),
+          const SizedBox(height: 6),
+          Text(
+            'Scan produk lalu tekan "Catat ke Diary Gizi"\nuntuk memantau asupan harian',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.white30, height: 1.5),
+          ),
+        ],
       ),
     );
   }
@@ -443,21 +533,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_outline_rounded,
-                size: 56, color: Colors.white24),
+            const Icon(Icons.lock_outline_rounded, size: 56, color: Colors.white24),
             const SizedBox(height: 16),
-            Text(
-              'Masuk untuk melihat Diary',
-              style: GoogleFonts.poppins(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,
-              ),
-            ),
+            Text('Masuk untuk melihat Diary',
+                style: GoogleFonts.poppins(
+                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
             const SizedBox(height: 8),
             Text(
-              'Diary gizi otomatis mencatat semua\nproduk yang kamu scan setiap hari',
+              'Catat konsumsi harian dan pantau asupan\ngula, natrium, & kalori vs batas AKG',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                  fontSize: 13, color: Colors.white38, height: 1.5),
+              style: GoogleFonts.inter(fontSize: 13, color: Colors.white38, height: 1.5),
             ),
           ],
         ),
@@ -472,19 +557,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
-                size: 48, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.error_outline_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(msg,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(fontSize: 14, color: Colors.white54)),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _loadHistory,
+              onPressed: _reload,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4ECDC4),
-                foregroundColor: Colors.black,
-              ),
+                  backgroundColor: const Color(0xFF4ECDC4), foregroundColor: Colors.black),
               child: const Text('Coba Lagi'),
             ),
           ],

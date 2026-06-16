@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import '../models/user_model.dart';
-import '../services/auth_service.dart';
 import 'scanner_screen.dart';
-import 'history_screen.dart';
+import 'diary_screen.dart';
+import 'explore_screen.dart';
 import 'saya_screen.dart';
-import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,118 +14,36 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  int _historyKey = 0;
+
+  // Key untuk me-refresh tab tertentu saat dibuka kembali.
+  int _diaryKey = 0;
+  int _exploreKey = 0;
   int _sayaKey = 0;
+
+  /// Memberi tahu ScannerScreen apakah tab scan sedang terlihat,
+  /// agar kamera bisa di-pause/resume untuk hemat resource.
+  final ValueNotifier<bool> _scannerVisibility = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    _scannerVisibility.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
-      body: StreamBuilder<UserModel?>(
-        stream: AuthService().authStateChanges,
-        initialData: AuthService().currentUser,
-        builder: (context, snapshot) {
-          final user = snapshot.data;
-          return IndexedStack(
-            index: _selectedIndex,
-            children: [
-              const ScannerScreen(),
-              user != null
-                  ? HistoryScreen(key: ValueKey(_historyKey), uid: user.id)
-                  : _buildLoginGate(
-                      icon: Icons.history_rounded,
-                      title: 'Riwayat Scan',
-                      subtitle: 'Login untuk melihat semua riwayat scan-mu.',
-                    ),
-              SayaScreen(key: ValueKey(_sayaKey)),
-            ],
-          );
-        },
-      ),
-      bottomNavigationBar: _buildNavBar(),
-    );
-  }
-
-  Widget _buildLoginGate({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
-      body: Stack(
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          Positioned(
-            top: -80, right: -80,
-            child: Container(
-              width: 250, height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF4ECDC4).withValues(alpha: 0.05),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(36),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4ECDC4).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF4ECDC4).withValues(alpha: 0.2),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Icon(icon, size: 52, color: const Color(0xFF4ECDC4)),
-                    ),
-                    const SizedBox(height: 28),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: Colors.white54, height: 1.5),
-                    ),
-                    const SizedBox(height: 36),
-                    SizedBox(
-                      width: double.infinity, height: 52,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4ECDC4),
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Masuk / Daftar',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          ScannerScreen(visibilityNotifier: _scannerVisibility),
+          DiaryScreen(key: ValueKey('diary_$_diaryKey')),
+          ExploreScreen(key: ValueKey('explore_$_exploreKey')),
+          SayaScreen(key: ValueKey('saya_$_sayaKey')),
         ],
       ),
+      bottomNavigationBar: _buildNavBar(),
     );
   }
 
@@ -139,27 +55,31 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: GNav(
-            gap: 8,
+            gap: 6,
             backgroundColor: Colors.transparent,
             color: Colors.white38,
             activeColor: const Color(0xFF4ECDC4),
             tabBackgroundColor: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
             iconSize: 22,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             duration: const Duration(milliseconds: 300),
+            selectedIndex: _selectedIndex,
             onTabChange: (index) {
               setState(() {
-                if (index == 1 && _selectedIndex != 1) _historyKey++;
-                if (index == 2 && _selectedIndex != 2) _sayaKey++;
+                if (index == 1 && _selectedIndex != 1) _diaryKey++;
+                if (index == 2 && _selectedIndex != 2) _exploreKey++;
+                if (index == 3 && _selectedIndex != 3) _sayaKey++;
                 _selectedIndex = index;
               });
+              _scannerVisibility.value = (index == 0);
             },
             tabs: const [
               GButton(icon: Icons.qr_code_scanner_rounded, text: 'Scan'),
-              GButton(icon: Icons.history_rounded, text: 'Riwayat'),
-              GButton(icon: Icons.person_outline_rounded, text: 'Profil'),
+              GButton(icon: Icons.book_rounded, text: 'Diary'),
+              GButton(icon: Icons.explore_rounded, text: 'Jelajah'),
+              GButton(icon: Icons.person_rounded, text: 'Profil'),
             ],
           ),
         ),
