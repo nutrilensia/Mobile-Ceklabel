@@ -24,6 +24,7 @@ dependencies:
   google_nav_bar: ^5.0.6
   pdf: ^3.11.2
   printing: ^5.13.2
+  flutter_image_compress: ^2.4.0
 
 dev_dependencies:
   flutter_test:

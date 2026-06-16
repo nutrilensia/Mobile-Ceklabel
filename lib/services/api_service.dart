@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../models/scan_result.dart';
 import '../models/user_model.dart';
 import '../models/history_item.dart';
@@ -13,6 +16,7 @@ import '../models/gamification.dart';
 import '../models/weekly_report.dart';
 import '../models/chat_message.dart';
 import '../models/health_risk.dart';
+import '../models/live_scan_result.dart';
 import '../services/auth_service.dart';
 
 class ApiService {
@@ -467,6 +471,38 @@ class ApiService {
         options: _authHeader(),
       );
       return WeeklyReport.fromJson(res.data);
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
+  // ── Live AR Mode ──────────────────────────────────────────────────────────
+
+  Future<LiveScanResult> scanLive(File imageFile) async {
+    // Downscale frame to max 640px wide — reduces Vision API input tokens ~60-70%
+    File fileToUpload = imageFile;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final outPath = p.join(tempDir.path, 'live_compressed.jpg');
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        imageFile.path,
+        outPath,
+        minWidth: 640,
+        minHeight: 1,
+        quality: 72,
+      );
+      if (compressed != null) fileToUpload = File(compressed.path);
+    } catch (_) {}
+    try {
+      final form = FormData.fromMap({
+        'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'frame.jpg'),
+      });
+      final res = await _dio.post(
+        '$baseUrl/api/live/scan',
+        data: form,
+        options: AuthService().isLoggedIn ? _authHeader() : null,
+      );
+      return LiveScanResult.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
     }
