@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -550,7 +551,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -620,14 +621,14 @@ class _ScannerScreenState extends State<ScannerScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (!_hasPermission && _errorMessage != null) ...[
-              const Icon(Icons.camera_alt_rounded, size: 64, color: Colors.white24),
+              Icon(Icons.camera_alt_rounded, size: 64, color: AppColors.textQuaternary(context)),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 15, color: Colors.white54),
+                  style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary(context)),
                 ),
               ),
               const SizedBox(height: 24),
@@ -643,14 +644,14 @@ class _ScannerScreenState extends State<ScannerScreen>
               ),
             ] else if (_hasPermission && _errorMessage != null) ...[
               // Camera error with retry — permission granted but camera init failed
-              const Icon(Icons.error_outline_rounded, size: 64, color: Colors.white24),
+              Icon(Icons.error_outline_rounded, size: 64, color: AppColors.textQuaternary(context)),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 15, color: Colors.white54),
+                  style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary(context)),
                 ),
               ),
               const SizedBox(height: 24),
@@ -671,7 +672,7 @@ class _ScannerScreenState extends State<ScannerScreen>
             ] else ...[
               const CircularProgressIndicator(color: Color(0xFF4ECDC4)),
               const SizedBox(height: 16),
-              Text('Memuat kamera...', style: GoogleFonts.inter(fontSize: 15, color: Colors.white54)),
+              Text('Memuat kamera...', style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary(context))),
             ],
           ],
         ),
@@ -758,7 +759,7 @@ class _ScannerScreenState extends State<ScannerScreen>
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              border: Border.all(color: AppColors.inputBorder(context)),
             ),
             child: Text(
               zoomText,
@@ -787,7 +788,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(color: AppColors.inputBorder(context)),
                 ),
                 child: const Icon(Icons.eco_rounded, color: Color(0xFF4ECDC4), size: 22),
               ),
@@ -795,7 +796,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               Text(
                 'CekLabel',
                 style: GoogleFonts.poppins(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white,
+                  fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                 ),
               ),
               const Spacer(),
@@ -817,7 +818,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                           ? const Color(0xFFFFAD00)
                           : _liveMode
                               ? const Color(0xFF4ECDC4)
-                              : Colors.white.withValues(alpha: 0.12),
+                              : AppColors.inputBorder(context),
                     ),
                   ),
                   child: Row(
@@ -854,9 +855,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    border: Border.all(color: AppColors.inputBorder(context)),
                   ),
-                  child: const Icon(Icons.flip_camera_android_rounded, color: Colors.white, size: 20),
+                  child: Icon(Icons.flip_camera_android_rounded, color: AppColors.textPrimary(context), size: 20),
                 ),
               ),
               const SizedBox(width: 10),
@@ -873,7 +874,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     border: Border.all(
                       color: _isFlashOn
                           ? const Color(0xFFFFD93D).withValues(alpha: 0.5)
-                          : Colors.white.withValues(alpha: 0.12),
+                          : AppColors.inputBorder(context),
                     ),
                   ),
                   child: Icon(
@@ -933,9 +934,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                       margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(color: AppColors.textPrimary(context), width: 3),
                       ),
-                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 30),
+                      child: Icon(Icons.camera_alt_rounded, color: AppColors.textPrimary(context), size: 30),
                     ),
                   ),
                 ),
@@ -959,8 +960,8 @@ class _ScannerScreenState extends State<ScannerScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF12121F),
+        decoration: BoxDecoration(
+          color: AppColors.bottomSheet(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -972,7 +973,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24, borderRadius: BorderRadius.circular(2),
+                  color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
@@ -980,7 +981,7 @@ class _ScannerScreenState extends State<ScannerScreen>
             Text(
               'Tips Scan yang Baik',
               style: GoogleFonts.poppins(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,
+                fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 16),
@@ -1002,7 +1003,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     Expanded(
                       child: Text(
                         tip.$2,
-                        style: GoogleFonts.inter(fontSize: 13, color: Colors.white70, height: 1.4),
+                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.textBody(context), height: 1.4),
                       ),
                     ),
                   ],
@@ -1031,12 +1032,12 @@ class _ScannerScreenState extends State<ScannerScreen>
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.4),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              border: Border.all(color: AppColors.inputBorder(context)),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: AppColors.textPrimary(context), size: 24),
           ),
           const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.inter(fontSize: 11, color: Colors.white60)),
+          Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary(context))),
         ],
       ),
     );
@@ -1060,7 +1061,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               border: Border.all(
                 color: isCustom
                     ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.15),
+                    : AppColors.inputBorder(context),
               ),
             ),
             child: Row(
@@ -1081,8 +1082,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 16, color: Colors.white38),
+                Icon(Icons.keyboard_arrow_down_rounded,
+                    size: 16, color: AppColors.textTertiary(context)),
               ],
             ),
           ),
@@ -1096,8 +1097,8 @@ class _ScannerScreenState extends State<ScannerScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF12121F),
+        decoration: BoxDecoration(
+          color: AppColors.bottomSheet(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
@@ -1109,7 +1110,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppColors.textQuaternary(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1118,13 +1119,13 @@ class _ScannerScreenState extends State<ScannerScreen>
             Text(
               'Scan untuk siapa?',
               style: GoogleFonts.poppins(
-                fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white,
+                fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Hasil analisis akan disesuaikan dengan profil yang dipilih',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context)),
             ),
             const SizedBox(height: 16),
             _buildProfileOption(
@@ -1143,7 +1144,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   'Belum ada anggota keluarga. Tambahkan di menu Profil.',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context)),
                 ),
               )
             else
@@ -1182,12 +1183,12 @@ class _ScannerScreenState extends State<ScannerScreen>
         decoration: BoxDecoration(
           color: selected
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.04),
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected
                 ? const Color(0xFF4ECDC4).withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.06),
+                : AppColors.cardBorder(context),
           ),
         ),
         child: Row(
@@ -1197,7 +1198,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               decoration: BoxDecoration(
                 color: selected
                     ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
-                    : Colors.white.withValues(alpha: 0.06),
+                    : AppColors.cardBorder(context),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon,
@@ -1218,7 +1219,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                   ),
                   if (allergies != null && allergies.isNotEmpty) ...[
                     const SizedBox(height: 3),
@@ -1316,7 +1317,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               _liveStatus,
               style: GoogleFonts.inter(
                 fontSize: 12.5,
-                color: Colors.white,
+                color: AppColors.textPrimary(context),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1337,7 +1338,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         border: Border.all(
           color: isNewest
               ? d.gradeColor.withValues(alpha: 0.8)
-              : Colors.white.withValues(alpha: 0.1),
+              : AppColors.inputBorder(context),
           width: isNewest ? 1.5 : 1,
         ),
       ),
@@ -1361,7 +1362,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ),
@@ -1379,7 +1380,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 Text(
@@ -1421,7 +1422,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               const SizedBox(width: 10),
               Text(
                 'Tahan kamera — sedang memfokus...',
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500),
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textPrimary(context), fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -1437,7 +1438,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
+            color: AppColors.surface(context),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
           ),
@@ -1455,7 +1456,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   _loadingMessages[_loadingTextIndex],
                   key: ValueKey<int>(_loadingTextIndex),
                   style: GoogleFonts.poppins(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,
+                    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1463,7 +1464,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               const SizedBox(height: 6),
               Text(
                 'Mohon tunggu sebentar',
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white54),
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context)),
               ),
             ],
           ),
@@ -1491,7 +1492,7 @@ class _LiveDetailDialog extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
             decoration: BoxDecoration(
-              color: const Color(0xFF12121F),
+              color: AppColors.bottomSheet(context),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: c.withValues(alpha: 0.45), width: 1.5),
               boxShadow: [
@@ -1528,7 +1529,7 @@ class _LiveDetailDialog extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary(context),
                             height: 1,
                           ),
                         ),
@@ -1547,7 +1548,7 @@ class _LiveDetailDialog extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -1567,7 +1568,7 @@ class _LiveDetailDialog extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     'Kategori: ${result.category}',
-                    style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context)),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -1575,17 +1576,17 @@ class _LiveDetailDialog extends StatelessWidget {
                 // ── Nutrition stats — cascade in with count-up ──
                 Row(
                   children: [
-                    _stat(0, 'Kalori', result.calories, 'kkal', const Color(0xFFFF6B6B)),
+                    _stat(context, 0, 'Kalori', result.calories, 'kkal', const Color(0xFFFF6B6B)),
                     const SizedBox(width: 8),
-                    _stat(1, 'Gula', result.sugarG, 'g', const Color(0xFFFFAD00)),
+                    _stat(context, 1, 'Gula', result.sugarG, 'g', const Color(0xFFFFAD00)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _stat(2, 'Natrium', result.sodiumMg, 'mg', const Color(0xFF4ECDC4)),
+                    _stat(context, 2, 'Natrium', result.sodiumMg, 'mg', const Color(0xFF4ECDC4)),
                     const SizedBox(width: 8),
-                    _stat(3, 'Lemak Jenuh', result.fatSaturatedG, 'g', const Color(0xFF9B6BFF)),
+                    _stat(context, 3, 'Lemak Jenuh', result.fatSaturatedG, 'g', const Color(0xFF9B6BFF)),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -1594,12 +1595,12 @@ class _LiveDetailDialog extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white30),
+                    Icon(Icons.camera_alt_rounded, size: 14, color: AppColors.textQuaternary(context)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Pencet tombol shutter untuk analisis lengkap, komposisi & simpan ke riwayat.',
-                        style: GoogleFonts.inter(fontSize: 11, color: Colors.white38, height: 1.4),
+                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context), height: 1.4),
                       ),
                     ),
                   ],
@@ -1610,13 +1611,13 @@ class _LiveDetailDialog extends StatelessWidget {
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.06),
+                      backgroundColor: AppColors.cardBorder(context),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: Text(
                       'Tutup',
-                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70),
+                      style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBody(context)),
                     ),
                   ),
                 ),
@@ -1629,7 +1630,7 @@ class _LiveDetailDialog extends StatelessWidget {
   }
 
   /// One nutrition stat card with a staggered slide-up + count-up animation.
-  Widget _stat(int index, String label, double value, String unit, Color color) {
+  Widget _stat(BuildContext context, int index, String label, double value, String unit, Color color) {
     return Expanded(
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: 1),
@@ -1666,7 +1667,7 @@ class _LiveDetailDialog extends StatelessWidget {
                   Text(
                     label,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 10.5, color: Colors.white54),
+                    style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.textSecondary(context)),
                   ),
                 ],
               ),

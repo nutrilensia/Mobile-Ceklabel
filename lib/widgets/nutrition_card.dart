@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
 
@@ -23,10 +24,10 @@ class NutritionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.cardBorder(context),
         ),
       ),
       child: Column(
@@ -52,19 +53,19 @@ class NutritionCard extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          ...items.map((item) => _buildNutritionRow(item)),
+          ...items.map((item) => _buildNutritionRow(context, item)),
         ],
       ),
     );
   }
 
-  Widget _buildNutritionRow(_NutritionItem item) {
+  Widget _buildNutritionRow(BuildContext context, _NutritionItem item) {
     final clampedRatio = item.ratio.clamp(0.0, 1.0);
 
     return Padding(
@@ -78,7 +79,7 @@ class NutritionCard extends StatelessWidget {
                 item.name,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: Colors.white70,
+                  color: AppColors.textBody(context),
                 ),
               ),
               RichText(
@@ -89,14 +90,14 @@ class NutritionCard extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     TextSpan(
                       text: ' ${item.unit}',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: Colors.white38,
+                        color: AppColors.textTertiary(context),
                       ),
                     ),
                   ],
@@ -115,7 +116,7 @@ class NutritionCard extends StatelessWidget {
                   Container(
                     height: 6,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.cardBorder(context),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),

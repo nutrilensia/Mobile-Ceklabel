@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/chat_message.dart';
 import '../models/family_profile.dart';
@@ -19,10 +20,11 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   FamilyProfile? _selectedProfile;
 
-  static const _bg = Color(0xFF0A0A0F);
-  static const _surface = Color(0xFF12121F);
+  // Colors now from AppColors
+  
   static const _teal = Color(0xFF4ECDC4);
-  static const _userBubble = Color(0xFF1A3A3A);
+  // Surface/bg colors now from AppColors
+  
 
   @override
   void initState() {
@@ -95,12 +97,12 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: _surface,
+        backgroundColor: AppColors.bottomSheet(context),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary(context), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -119,11 +121,11 @@ class _ChatScreenState extends State<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Asisten Gizi', style: GoogleFonts.poppins(
-                  fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
+                  fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                 )),
                 Text(
                   _selectedProfile != null ? 'Profil: ${_selectedProfile!.name}' : 'Profil utama',
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                 ),
               ],
             ),
@@ -132,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           if (_messages.length > 1)
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Colors.white54, size: 20),
+              icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary(context), size: 20),
               tooltip: 'Mulai percakapan baru',
               onPressed: () => setState(() {
                 _messages.clear();
@@ -193,7 +195,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isUser ? _userBubble : _surface,
+                color: isUser ? AppColors.userBubble(context) : AppColors.surface(context),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(isUser ? 18 : 4),
                   topRight: Radius.circular(isUser ? 4 : 18),
@@ -203,7 +205,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 border: Border.all(
                   color: isUser
                       ? _teal.withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.06),
+                      : AppColors.cardBorder(context),
                 ),
               ),
               child: Text(
@@ -238,14 +240,14 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: _surface,
+              color: AppColors.surface(context),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(18),
                 bottomLeft: Radius.circular(18),
                 bottomRight: Radius.circular(18),
               ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              border: Border.all(color: AppColors.cardBorder(context)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -314,27 +316,27 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 10,
       ),
       decoration: BoxDecoration(
-        color: _surface,
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
+        color: AppColors.surface(context),
+        border: Border(top: BorderSide(color: AppColors.cardBorder(context))),
       ),
       child: Row(
         children: [
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.cardBg(context),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                border: Border.all(color: AppColors.inputBorder(context)),
               ),
               child: TextField(
                 controller: _controller,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary(context)),
                 maxLines: 4,
                 minLines: 1,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: 'Tanya seputar nutrisi...',
-                  hintStyle: GoogleFonts.inter(fontSize: 14, color: Colors.white30),
+                  hintStyle: GoogleFonts.inter(fontSize: 14, color: AppColors.textQuaternary(context)),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
@@ -363,7 +365,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: EdgeInsets.all(12),
                       child: CircularProgressIndicator(color: _teal, strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                  : Icon(Icons.send_rounded, color: AppColors.textPrimary(context), size: 20),
             ),
           ),
         ],

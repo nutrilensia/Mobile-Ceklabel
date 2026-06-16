@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/health_risk.dart';
 import '../services/api_service.dart';
@@ -15,9 +16,10 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
   bool _loading = true;
   String? _error;
 
-  static const _bg = Color(0xFF0A0A0F);
-  static const _surface = Color(0xFF12121F);
+  // Colors now from AppColors
+  
   static const _teal = Color(0xFF4ECDC4);
+  // Surface/bg colors now from AppColors
 
   @override
   void initState() {
@@ -38,19 +40,19 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: _surface,
+        backgroundColor: AppColors.bottomSheet(context),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary(context), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('Prediksi Risiko Kesehatan',
-            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white54),
+            icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary(context)),
             onPressed: _load,
           ),
         ],
@@ -70,10 +72,10 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.white24),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text(_error!, textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white54)),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _load,
@@ -117,7 +119,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _surface,
+        color: AppColors.bottomSheet(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -140,7 +142,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Risiko Keseluruhan',
-                        style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context))),
                     Text(label,
                         style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
                   ],
@@ -149,18 +151,18 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${r.daysWithData} hari data',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          Text(r.summary, style: GoogleFonts.inter(fontSize: 13, color: Colors.white70, height: 1.5)),
+          Text(r.summary, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textBody(context), height: 1.5)),
         ],
       ),
     );
@@ -170,20 +172,20 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _surface,
+        color: AppColors.bottomSheet(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.bar_chart_rounded, size: 48, color: Colors.white24),
+          Icon(Icons.bar_chart_rounded, size: 48, color: AppColors.textQuaternary(context)),
           const SizedBox(height: 12),
           Text(r.summary, textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.white54, height: 1.5)),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context), height: 1.5)),
           const SizedBox(height: 16),
           Text('Catat konsumsi di menu Diary setelah scan produk.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context))),
         ],
       ),
     );
@@ -209,7 +211,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
                 Text('Pola Makan Sehat!',
                     style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E8F4E))),
                 Text('Semua nutrisi dalam batas aman. Pertahankan!',
-                    style: GoogleFonts.inter(fontSize: 13, color: Colors.white60, height: 1.4)),
+                    style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context), height: 1.4)),
               ],
             ),
           ),
@@ -226,7 +228,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: _surface,
+        color: AppColors.bottomSheet(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
@@ -250,7 +252,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
                           const SizedBox(width: 6),
                           Text(risk.label,
                               style: GoogleFonts.poppins(
-                                  fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                                  fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -317,7 +319,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
       borderRadius: BorderRadius.circular(4),
       child: Stack(
         children: [
-          Container(height: 6, color: Colors.white.withValues(alpha: 0.06)),
+          Container(height: 6, color: AppColors.cardBorder(context)),
           // 100% marker
           Positioned(
             left: MediaQuery.of(context).size.width * 0.5 - 48,
@@ -348,7 +350,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
         Icon(icon, size: 14, color: iconColor),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(text, style: GoogleFonts.inter(fontSize: 12, color: Colors.white60, height: 1.4)),
+          child: Text(text, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context), height: 1.4)),
         ),
       ],
     );
@@ -382,7 +384,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
                 const Text('•', style: TextStyle(color: Color(0xFF1E8F4E), fontSize: 14)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(p, style: GoogleFonts.inter(fontSize: 12, color: Colors.white60, height: 1.4)),
+                  child: Text(p, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context), height: 1.4)),
                 ),
               ],
             ),
@@ -397,19 +399,19 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: AppColors.cardBg(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 14, color: Colors.white24),
+          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.textQuaternary(context)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Analisis ini bersifat informatif berdasarkan data yang dicatat di diary. Konsultasikan dengan dokter atau ahli gizi untuk diagnosis dan saran medis.',
-              style: GoogleFonts.inter(fontSize: 11, color: Colors.white30, height: 1.4),
+              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textQuaternary(context), height: 1.4),
             ),
           ),
         ],

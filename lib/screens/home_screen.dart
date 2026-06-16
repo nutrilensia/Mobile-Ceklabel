@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import '../theme/app_colors.dart';
 import 'scanner_screen.dart';
 import 'diary_screen.dart';
 import 'explore_screen.dart';
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
@@ -50,8 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0D0D1A),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
+        color: AppColors.navBarBg(context),
+        border: Border(top: BorderSide(color: AppColors.navBarBorder(context))),
       ),
       child: SafeArea(
         child: Padding(
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: GNav(
             gap: 6,
             backgroundColor: Colors.transparent,
-            color: Colors.white38,
+            color: AppColors.textTertiary(context),
             activeColor: const Color(0xFF4ECDC4),
             tabBackgroundColor: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
             iconSize: 22,

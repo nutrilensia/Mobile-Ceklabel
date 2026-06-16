@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/quiz.dart';
 import '../services/api_service.dart';
@@ -290,10 +291,10 @@ class _QuizScreenState extends State<QuizScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text(
           'Kuis Nutrisi',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17),
@@ -313,7 +314,7 @@ class _QuizScreenState extends State<QuizScreen>
             const CircularProgressIndicator(color: Color(0xFF4ECDC4)),
             const SizedBox(height: 16),
             Text('Memuat soal...',
-                style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
+                style: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 13)),
           ],
         ),
       );
@@ -360,12 +361,12 @@ class _QuizScreenState extends State<QuizScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: AppColors.cardBg(context),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text('Mode Offline',
                       style: GoogleFonts.inter(
-                          fontSize: 9, color: Colors.white24)),
+                          fontSize: 9, color: AppColors.textQuaternary(context))),
                 ),
             ],
           ),
@@ -376,7 +377,7 @@ class _QuizScreenState extends State<QuizScreen>
             children: [
               Text(
                 'Soal ${_currentIndex + 1} / $total',
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context)),
               ),
               const Spacer(),
               Row(
@@ -397,7 +398,7 @@ class _QuizScreenState extends State<QuizScreen>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (_currentIndex + 1) / total,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              backgroundColor: AppColors.cardBorder(context),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(Color(0xFF4ECDC4)),
               minHeight: 5,
@@ -415,7 +416,7 @@ class _QuizScreenState extends State<QuizScreen>
                 end: Alignment.bottomRight,
                 colors: [
                   const Color(0xFF4ECDC4).withValues(alpha: 0.06),
-                  Colors.white.withValues(alpha: 0.03),
+                  AppColors.cardBg(context),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -431,7 +432,7 @@ class _QuizScreenState extends State<QuizScreen>
                   q.text,
                   style: GoogleFonts.poppins(
                     fontSize: 16, fontWeight: FontWeight.w600,
-                    color: Colors.white, height: 1.5,
+                    color: AppColors.textPrimary(context), height: 1.5,
                   ),
                 ),
               ],
@@ -505,7 +506,7 @@ class _QuizScreenState extends State<QuizScreen>
               alignment: Alignment.center,
               child: Text(
                 'Pilih salah satu jawaban di atas',
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.white24),
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context)),
               ),
             ),
           ],
@@ -520,10 +521,10 @@ class _QuizScreenState extends State<QuizScreen>
     final isCorrect = answered && index == _answerResult!.correctIndex;
     final isWrong = answered && isSelected && !_answerResult!.isCorrect;
 
-    Color borderColor = Colors.white.withValues(alpha: 0.08);
-    Color bgColor = Colors.white.withValues(alpha: 0.04);
+    Color borderColor = AppColors.cardBorder(context);
+    Color bgColor = AppColors.cardBg(context);
     Color textColor = Colors.white70;
-    Color circleBg = Colors.white.withValues(alpha: 0.06);
+    Color circleBg = AppColors.cardBorder(context);
 
     if (isCorrect) {
       borderColor = const Color(0xFF4ECDC4).withValues(alpha: 0.5);
@@ -651,7 +652,7 @@ class _QuizScreenState extends State<QuizScreen>
                   child: Text(
                     result.explanation,
                     style: GoogleFonts.inter(
-                      fontSize: 12, color: Colors.white60, height: 1.5,
+                      fontSize: 12, color: AppColors.textSecondary(context), height: 1.5,
                     ),
                   ),
                 ),
@@ -700,7 +701,7 @@ class _QuizScreenState extends State<QuizScreen>
                     child: CircularProgressIndicator(
                       value: v,
                       strokeWidth: 8,
-                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                      backgroundColor: AppColors.cardBorder(context),
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   ),
@@ -716,7 +717,7 @@ class _QuizScreenState extends State<QuizScreen>
                       Text(
                         '$_score/$total',
                         style: GoogleFonts.inter(
-                            fontSize: 13, color: Colors.white38),
+                            fontSize: 13, color: AppColors.textTertiary(context)),
                       ),
                     ],
                   ),
@@ -726,13 +727,13 @@ class _QuizScreenState extends State<QuizScreen>
             const SizedBox(height: 24),
             Text('Kuis Selesai!',
                 style: GoogleFonts.poppins(
-                  fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white,
+                  fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                 )),
             const SizedBox(height: 8),
             Text(
               message,
               style: GoogleFonts.inter(
-                  fontSize: 14, color: Colors.white54, height: 1.5),
+                  fontSize: 14, color: AppColors.textSecondary(context), height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 36),
@@ -756,7 +757,7 @@ class _QuizScreenState extends State<QuizScreen>
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Kembali',
-                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 14)),
+                  style: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 14)),
             ),
           ],
         ),
@@ -770,10 +771,10 @@ class _QuizScreenState extends State<QuizScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.quiz_outlined,
-              size: 48, color: Colors.white.withValues(alpha: 0.2)),
+              size: 48, color: AppColors.textQuaternary(context)),
           const SizedBox(height: 12),
           Text('Belum ada soal',
-              style: GoogleFonts.poppins(color: Colors.white38, fontSize: 14)),
+              style: GoogleFonts.poppins(color: AppColors.textTertiary(context), fontSize: 14)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _useFallback,
@@ -796,18 +797,18 @@ class _QuizScreenState extends State<QuizScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.wifi_off_rounded,
-                size: 48, color: Colors.white.withValues(alpha: 0.25)),
+                size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text('Tidak dapat memuat soal dari server',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white54)),
+                    color: AppColors.textSecondary(context))),
             const SizedBox(height: 8),
             Text('Kamu tetap bisa bermain dengan soal offline.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white38)),
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textTertiary(context))),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity, height: 48,
@@ -827,7 +828,7 @@ class _QuizScreenState extends State<QuizScreen>
             TextButton(
               onPressed: _loadQuiz,
               child: Text('Coba Koneksi Lagi',
-                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 13)),
+                  style: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 13)),
             ),
           ],
         ),

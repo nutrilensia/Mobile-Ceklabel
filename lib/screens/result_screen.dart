@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
 import '../models/family_profile.dart';
@@ -46,12 +47,12 @@ class _ResultScreenState extends State<ResultScreen> {
     final canLog = AuthService().isLoggedIn && r.id != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
-            backgroundColor: const Color(0xFF0A0A0F),
+            backgroundColor: AppColors.scaffold(context),
             expandedHeight: 100,
             floating: false,
             pinned: true,
@@ -60,18 +61,18 @@ class _ResultScreenState extends State<ResultScreen> {
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.cardBorder(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 18),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.textPrimary(context), size: 18),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
               title: Text('Hasil Analisis',
                   style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
             ),
             actions: [
               Container(
@@ -213,14 +214,14 @@ class _ResultScreenState extends State<ResultScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary(context),
                             height: 1.3)),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        _chip(r.servingSize, Colors.white.withValues(alpha: 0.08), Colors.white60),
+                        _chip(r.servingSize, AppColors.cardBorder(context), Colors.white60),
                         if (r.category.isNotEmpty)
                           _chip(_capitalize(r.category),
                               const Color(0xFFAD7BFF).withValues(alpha: 0.12),
@@ -251,7 +252,7 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.2)),
       ),
@@ -272,7 +273,7 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(width: 10),
               Text('Untuk Keluarga',
                   style: GoogleFonts.poppins(
-                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 12),
@@ -291,12 +292,12 @@ class _ResultScreenState extends State<ResultScreen> {
       decoration: BoxDecoration(
         color: highlighted
             ? const Color(0xFF4ECDC4).withValues(alpha: 0.07)
-            : Colors.white.withValues(alpha: 0.03),
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: highlighted
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.06),
+              : AppColors.cardBorder(context),
         ),
       ),
       child: Column(
@@ -314,14 +315,14 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(width: 8),
               Text(insight.profileName,
                   style: GoogleFonts.inter(
-                      fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           if (insight.flags.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 22),
               child: Text('Relatif aman dalam porsi wajar',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context))),
             )
           else
             ...insight.flags.map((f) {
@@ -365,9 +366,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +387,7 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(width: 12),
               Text('Komposisi & Aditif',
                   style: GoogleFonts.poppins(
-                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 14),
@@ -430,7 +431,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
           if (ing.additives.isNotEmpty) ...[
             Text('Aditif terdeteksi',
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.white54)),
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context))),
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
@@ -448,13 +449,13 @@ class _ResultScreenState extends State<ResultScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline_rounded,
-                          size: 13, color: Colors.white38),
+                      Icon(Icons.info_outline_rounded,
+                          size: 13, color: AppColors.textTertiary(context)),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(w,
                             style: GoogleFonts.inter(
-                                fontSize: 12, color: Colors.white60, height: 1.4)),
+                                fontSize: 12, color: AppColors.textSecondary(context), height: 1.4)),
                       ),
                     ],
                   ),
@@ -465,11 +466,11 @@ class _ResultScreenState extends State<ResultScreen> {
           if (ing.raw != null && ing.raw!.isNotEmpty) ...[
             const Divider(color: Colors.white12, height: 20),
             Text('Daftar komposisi',
-                style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
             const SizedBox(height: 4),
             Text(ing.raw!,
                 style: GoogleFonts.inter(
-                    fontSize: 12, color: Colors.white54, height: 1.5)),
+                    fontSize: 12, color: AppColors.textSecondary(context), height: 1.5)),
           ],
         ],
       ),
@@ -511,9 +512,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,12 +533,12 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(width: 12),
               Text('Penjelasan',
                   style: GoogleFonts.poppins(
-                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 14),
           Text(widget.result.explanation,
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.white70, height: 1.6)),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textBody(context), height: 1.6)),
         ],
       ),
     );
@@ -549,7 +550,7 @@ class _ResultScreenState extends State<ResultScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2C3E50).withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,12 +569,12 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(width: 12),
               Text('Catatan',
                   style: GoogleFonts.poppins(
-                      fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 14),
           Text(widget.result.notes,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54, height: 1.6)),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context), height: 1.6)),
         ],
       ),
     );
@@ -587,7 +588,7 @@ class _ResultScreenState extends State<ResultScreen> {
         decoration: BoxDecoration(
           color: _loggedToDiary
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.08)
-              : Colors.white.withValues(alpha: 0.05),
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color(0xFF4ECDC4).withValues(alpha: _loggedToDiary ? 0.3 : 0.4)),
@@ -624,8 +625,8 @@ class _ResultScreenState extends State<ResultScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF12121F),
+          decoration: BoxDecoration(
+            color: AppColors.bottomSheet(context),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.fromLTRB(
@@ -639,20 +640,20 @@ class _ResultScreenState extends State<ResultScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                      color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               const SizedBox(height: 20),
               Text('Catat ke Diary',
                   style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
               const SizedBox(height: 4),
               Text(widget.result.productName,
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
               const SizedBox(height: 20),
 
               Text('Jumlah porsi',
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -665,12 +666,12 @@ class _ResultScreenState extends State<ResultScreen> {
                       decoration: BoxDecoration(
                         color: sel
                             ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
-                            : Colors.white.withValues(alpha: 0.05),
+                            : AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: sel
                                 ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
-                                : Colors.white.withValues(alpha: 0.08)),
+                                : AppColors.cardBorder(context)),
                       ),
                       child: Text(s == s.toInt() ? '${s.toInt()}' : '$s',
                           style: GoogleFonts.inter(
@@ -684,7 +685,7 @@ class _ResultScreenState extends State<ResultScreen> {
               const SizedBox(height: 20),
 
               Text('Untuk siapa',
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -734,12 +735,12 @@ class _ResultScreenState extends State<ResultScreen> {
         decoration: BoxDecoration(
           color: selected
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.05),
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: selected
                   ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.08)),
+                  : AppColors.cardBorder(context)),
         ),
         child: Text(name,
             style: GoogleFonts.inter(
@@ -765,7 +766,7 @@ class _ResultScreenState extends State<ResultScreen> {
         SnackBar(
           content: Text(
             warnings.isNotEmpty ? warnings.first : res.message,
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textPrimary(context)),
           ),
           backgroundColor: warnings.isNotEmpty
               ? const Color(0xFFE63E11)
@@ -814,11 +815,11 @@ class _ResultScreenState extends State<ResultScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
+            Icon(Icons.qr_code_scanner_rounded, color: AppColors.textPrimary(context), size: 22),
             const SizedBox(width: 10),
             Text('Scan Lagi',
                 style: GoogleFonts.poppins(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
           ],
         ),
       ),
@@ -867,7 +868,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             fontSize: 14, fontWeight: FontWeight.w700,
                             color: const Color(0xFFFF6B35))),
                     Text('Klaim pada kemasan yang perlu diperhatikan',
-                        style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
                   ],
                 ),
               ),
@@ -924,7 +925,7 @@ class _ResultScreenState extends State<ResultScreen> {
             padding: const EdgeInsets.only(left: 20),
             child: Text(c.issue,
                 style: GoogleFonts.inter(
-                    fontSize: 11, color: Colors.white60, height: 1.4)),
+                    fontSize: 11, color: AppColors.textSecondary(context), height: 1.4)),
           ),
         ],
       ),
@@ -937,9 +938,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -964,10 +965,10 @@ class _ResultScreenState extends State<ResultScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                            color: AppColors.textPrimary(context))),
                     Text('Jika kamu makan 1 saji hari ini',
                         style: GoogleFonts.inter(
-                            fontSize: 11, color: Colors.white38)),
+                            fontSize: 11, color: AppColors.textTertiary(context))),
                   ],
                 ),
               ),
@@ -1022,7 +1023,7 @@ class _ResultScreenState extends State<ResultScreen> {
               SizedBox(
                 width: 56,
                 child: Text(label,
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white54)),
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary(context))),
               ),
               Expanded(
                 child: ClipRRect(
@@ -1031,13 +1032,13 @@ class _ResultScreenState extends State<ResultScreen> {
                     children: [
                       Container(
                         height: 6,
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: AppColors.cardBorder(context),
                       ),
                       FractionallySizedBox(
                         widthFactor: n.pctBefore / 100,
                         child: Container(
                           height: 6,
-                          color: Colors.white24,
+                          color: AppColors.textQuaternary(context),
                         ),
                       ),
                       FractionallySizedBox(
@@ -1066,7 +1067,7 @@ class _ResultScreenState extends State<ResultScreen> {
             padding: const EdgeInsets.only(left: 56, top: 2),
             child: Text(
               '+${n.addedByThis}$unit → total ${n.afterEating}$unit / ${n.limit.toInt()}$unit',
-              style: GoogleFonts.inter(fontSize: 10, color: Colors.white30),
+              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textQuaternary(context)),
             ),
           ),
         ],
@@ -1107,10 +1108,10 @@ class _ResultScreenState extends State<ResultScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                            color: AppColors.textPrimary(context))),
                     Text('Produk serupa dengan NutriScore lebih baik',
                         style: GoogleFonts.inter(
-                            fontSize: 11, color: Colors.white38)),
+                            fontSize: 11, color: AppColors.textTertiary(context))),
                   ],
                 ),
               ),
@@ -1129,9 +1130,9 @@ class _ResultScreenState extends State<ResultScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Row(
         children: [
@@ -1159,18 +1160,18 @@ class _ResultScreenState extends State<ResultScreen> {
                     style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white),
+                        color: AppColors.textPrimary(context)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 if (alt.brand != null && alt.brand!.isNotEmpty)
                   Text(alt.brand!,
                       style: GoogleFonts.inter(
-                          fontSize: 11, color: Colors.white38)),
+                          fontSize: 11, color: AppColors.textTertiary(context))),
               ],
             ),
           ),
           Text('skor ${alt.finalScore}',
-              style: GoogleFonts.inter(fontSize: 10, color: Colors.white30)),
+              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textQuaternary(context))),
         ],
       ),
     );

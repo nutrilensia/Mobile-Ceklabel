@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class NutriScoreBadge extends StatelessWidget {
@@ -125,7 +126,7 @@ class NutriScoreBadge extends StatelessWidget {
               'Skor: $finalScore',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.white54,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ],

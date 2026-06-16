@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -61,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: Stack(
         children: [
           // Background Gradient Elements
@@ -101,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Text(
                       'Lewati',
                       style: GoogleFonts.inter(
-                        color: Colors.white60,
+                        color: AppColors.textSecondary(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -147,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: AppColors.textPrimary(context),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -156,7 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               page['description'],
                               style: GoogleFonts.inter(
                                 fontSize: 16,
-                                color: Colors.white70,
+                                color: AppColors.textBody(context),
                                 height: 1.5,
                               ),
                               textAlign: TextAlign.center,
@@ -222,14 +223,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   ? Text(
                                       'Mulai Scan',
                                       style: GoogleFonts.poppins(
-                                        color: Colors.white,
+                                        color: AppColors.textPrimary(context),
                                         fontWeight: FontWeight.w600,
                                         fontSize: 16,
                                       ),
                                     )
-                                  : const Icon(
+                                  : Icon(
                                       Icons.arrow_forward_ios_rounded,
-                                      color: Colors.white,
+                                      color: AppColors.textPrimary(context),
                                       size: 20,
                                     ),
                             ),

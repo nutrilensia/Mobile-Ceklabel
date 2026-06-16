@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_provider.dart';
 import '../models/gamification.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -39,16 +42,16 @@ class _SayaScreenState extends State<SayaScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dialogBg(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Keluar?',
-            style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+            style: GoogleFonts.poppins(color: AppColors.textPrimary(context), fontWeight: FontWeight.w600)),
         content: Text('Kamu akan keluar dari akun ini.',
-            style: GoogleFonts.inter(color: Colors.white60)),
+            style: GoogleFonts.inter(color: AppColors.textSecondary(context))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: GoogleFonts.inter(color: Colors.white54)),
+            child: Text('Batal', style: GoogleFonts.inter(color: AppColors.textSecondary(context))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -77,7 +80,7 @@ class _SayaScreenState extends State<SayaScreen> {
 
   Widget _buildPage(String name, String email) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -87,7 +90,7 @@ class _SayaScreenState extends State<SayaScreen> {
               const SizedBox(height: 16),
               Text('Profil',
                   style: GoogleFonts.poppins(
-                      fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                      fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
               const SizedBox(height: 14),
 
               _buildUserCard(name, email),
@@ -133,6 +136,10 @@ class _SayaScreenState extends State<SayaScreen> {
                     MaterialPageRoute(builder: (_) => const QuizScreen()));
                 _loadStats();
               }),
+
+              const SizedBox(height: 24),
+              _buildLabel('Pengaturan'),
+              _buildThemeSelector(),
 
               const SizedBox(height: 40),
             ],
@@ -193,10 +200,10 @@ class _SayaScreenState extends State<SayaScreen> {
                 children: [
                   Text(name,
                       style: GoogleFonts.poppins(
-                          fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context)),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   Text(email,
-                      style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
+                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
                   Row(
@@ -234,9 +241,9 @@ class _SayaScreenState extends State<SayaScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: AppColors.cardBorder(context)),
         ),
         child: Row(
           children: [
@@ -259,16 +266,16 @@ class _SayaScreenState extends State<SayaScreen> {
           const SizedBox(height: 4),
           Text(value,
               style: GoogleFonts.poppins(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
           Text(label,
-              style: GoogleFonts.inter(fontSize: 10, color: Colors.white38)),
+              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textTertiary(context))),
         ],
       ),
     );
   }
 
   Widget _divider() =>
-      Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.08));
+      Container(width: 1, height: 36, color: AppColors.cardBorder(context));
 
   void _showBadges(GamificationStats s) {
     showModalBottomSheet(
@@ -281,8 +288,8 @@ class _SayaScreenState extends State<SayaScreen> {
         maxChildSize: 0.9,
         expand: false,
         builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF12121F),
+          decoration: BoxDecoration(
+            color: AppColors.bottomSheet(context),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -293,15 +300,15 @@ class _SayaScreenState extends State<SayaScreen> {
                 child: Container(
                   width: 40, height: 4,
                   decoration: BoxDecoration(
-                      color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                      color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               const SizedBox(height: 16),
               Text('Pencapaian',
                   style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
               Text('${s.earnedCount} dari ${s.badges.length} badge diraih',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context))),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
@@ -324,12 +331,12 @@ class _SayaScreenState extends State<SayaScreen> {
       decoration: BoxDecoration(
         color: b.earned
             ? const Color(0xFFFFAD00).withValues(alpha: 0.06)
-            : Colors.white.withValues(alpha: 0.03),
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: b.earned
                 ? const Color(0xFFFFAD00).withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.06)),
+                : AppColors.cardBorder(context)),
       ),
       child: Row(
         children: [
@@ -338,13 +345,13 @@ class _SayaScreenState extends State<SayaScreen> {
             decoration: BoxDecoration(
               color: b.earned
                   ? const Color(0xFFFFAD00).withValues(alpha: 0.15)
-                  : Colors.white.withValues(alpha: 0.05),
+                  : AppColors.cardBg(context),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: b.earned
-                ? Text(b.icon ?? '🏅', style: const TextStyle(fontSize: 22))
-                : const Icon(Icons.lock_outline_rounded, size: 18, color: Colors.white24),
+                ? Text(b.icon ?? '🏅', style: TextStyle(fontSize: 22))
+                : Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.textQuaternary(context)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -377,7 +384,7 @@ class _SayaScreenState extends State<SayaScreen> {
           style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Colors.white30,
+              color: AppColors.textQuaternary(context),
               letterSpacing: 1.2)),
     );
   }
@@ -390,9 +397,9 @@ class _SayaScreenState extends State<SayaScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: AppColors.cardBorder(context)),
         ),
         child: Row(
           children: [
@@ -412,9 +419,9 @@ class _SayaScreenState extends State<SayaScreen> {
                 children: [
                   Text(title,
                       style: GoogleFonts.poppins(
-                          fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                          fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
                   Text(subtitle,
-                      style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -429,7 +436,7 @@ class _SayaScreenState extends State<SayaScreen> {
 
   Widget _buildLoginGate() {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -450,11 +457,11 @@ class _SayaScreenState extends State<SayaScreen> {
                 const SizedBox(height: 28),
                 Text('Profil',
                     style: GoogleFonts.poppins(
-                        fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                        fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
                 const SizedBox(height: 10),
                 Text(
                   'Login untuk mengakses diary gizi, laporan, profil keluarga, gamifikasi, dan fitur lainnya.',
-                  style: GoogleFonts.inter(fontSize: 14, color: Colors.white54, height: 1.5),
+                  style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context), height: 1.5),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 36),
@@ -474,6 +481,119 @@ class _SayaScreenState extends State<SayaScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector() {
+    final themeProvider = context.watch<ThemeProvider>();
+    final mode = themeProvider.mode;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.cardBorder(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B59B6).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.palette_rounded,
+                    color: Color(0xFF9B59B6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Tema Aplikasi',
+                        style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary(context))),
+                    Text('Pilih tampilan yang kamu suka',
+                        style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.textSecondary(context))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.inputFill(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                _themeOption(
+                    Icons.phone_android_rounded, 'Sistem', ThemeMode.system,
+                    mode == ThemeMode.system, themeProvider),
+                _themeOption(
+                    Icons.light_mode_rounded, 'Terang', ThemeMode.light,
+                    mode == ThemeMode.light, themeProvider),
+                _themeOption(
+                    Icons.dark_mode_rounded, 'Gelap', ThemeMode.dark,
+                    mode == ThemeMode.dark, themeProvider),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _themeOption(IconData icon, String label, ThemeMode targetMode,
+      bool isActive, ThemeProvider provider) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => provider.setMode(targetMode),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive
+                ? const Color(0xFF4ECDC4).withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isActive
+                  ? const Color(0xFF4ECDC4).withValues(alpha: 0.4)
+                  : Colors.transparent,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon,
+                  size: 20,
+                  color: isActive
+                      ? const Color(0xFF4ECDC4)
+                      : AppColors.textTertiary(context)),
+              const SizedBox(height: 4),
+              Text(label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                    color: isActive
+                        ? const Color(0xFF4ECDC4)
+                        : AppColors.textTertiary(context),
+                  )),
+            ],
           ),
         ),
       ),

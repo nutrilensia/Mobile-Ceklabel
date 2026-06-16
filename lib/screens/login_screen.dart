@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: Stack(
         children: [
           Positioned(
@@ -105,12 +106,12 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.07),
+                        color: AppColors.cardBorder(context),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 18,
+                        color: AppColors.textPrimary(context), size: 18,
                       ),
                     ),
                   ),
@@ -131,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen>
                       Text(
                         'CekLabel',
                         style: GoogleFonts.poppins(
-                          fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white,
+                          fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                         ),
                       ),
                     ],
@@ -139,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 32),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.cardBorder(context),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: TabBar(
@@ -198,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen>
                               _obscurePassword
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
-                              color: Colors.white38, size: 20,
+                              color: AppColors.textTertiary(context), size: 20,
                             ),
                           ),
                           validator: (v) {
@@ -271,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 16),
                           Text(
                             'Password: min. 8 karakter, ada huruf kapital & angka',
-                            style: GoogleFonts.inter(fontSize: 12, color: Colors.white30),
+                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context)),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -300,21 +301,21 @@ class _LoginScreenState extends State<LoginScreen>
       controller: ctrl,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: GoogleFonts.inter(color: Colors.white),
+      style: GoogleFonts.inter(color: AppColors.textPrimary(context)),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
-        prefixIcon: Icon(icon, color: Colors.white38, size: 20),
+        labelStyle: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 14),
+        prefixIcon: Icon(icon, color: AppColors.textTertiary(context), size: 20),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
+        fillColor: AppColors.cardBorder(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: AppColors.inputBorder(context)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: AppColors.inputBorder(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

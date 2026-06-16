@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'compare_screen.dart';
@@ -24,8 +25,8 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF12121F),
+        decoration: BoxDecoration(
+          color: AppColors.bottomSheet(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -35,7 +36,7 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
             Container(
               width: 40, height: 4,
               decoration: BoxDecoration(
-                  color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 20),
             _sourceTile(ctx, Icons.photo_camera_rounded, 'Ambil Foto', ImageSource.camera),
@@ -72,9 +73,9 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: AppColors.cardBorder(context)),
         ),
         child: Row(
           children: [
@@ -82,7 +83,7 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
             const SizedBox(width: 14),
             Text(label,
                 style: GoogleFonts.inter(
-                    fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500)),
+                    fontSize: 14, color: AppColors.textPrimary(context), fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -101,10 +102,10 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
   Widget build(BuildContext context) {
     final canCompare = _photos.length >= 2;
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text('Bandingkan dari Foto',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17)),
         elevation: 0,
@@ -165,8 +166,8 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4ECDC4),
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.white12,
-                    disabledForegroundColor: Colors.white38,
+                    disabledBackgroundColor: AppColors.disabledBg(context),
+                    disabledForegroundColor: AppColors.disabledFg(context),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -183,9 +184,9 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Row(
         children: [
@@ -198,11 +199,11 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
           Expanded(
             child: Text('Produk ${i + 1}',
                 style: GoogleFonts.poppins(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
           ),
           IconButton(
             onPressed: () => setState(() => _photos.removeAt(i)),
-            icon: const Icon(Icons.close_rounded, color: Colors.white38, size: 20),
+            icon: Icon(Icons.close_rounded, color: AppColors.textTertiary(context), size: 20),
           ),
           const SizedBox(width: 4),
         ],
@@ -216,7 +217,7 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
       child: Container(
         height: 80,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: const Color(0xFF4ECDC4).withValues(alpha: 0.3),

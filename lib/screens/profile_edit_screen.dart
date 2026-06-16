@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/health_profile.dart';
 import '../models/user_model.dart';
@@ -91,10 +92,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text('Edit Profil',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17)),
         elevation: 0,
@@ -128,22 +129,22 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   keyboardType: TextInputType.number),
               const SizedBox(height: 6),
               Text('Pria dewasa ~2500 kkal • Wanita dewasa ~2000 kkal',
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white30)),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textQuaternary(context))),
             ]),
             const SizedBox(height: 24),
             _buildSection('Kondisi Kesehatan', [
               _buildToggle('Diabetes', 'Pantau kadar gula lebih ketat',
                   Icons.monitor_heart_outlined, _hasDiabetes,
                   (v) => setState(() => _hasDiabetes = v)),
-              const Divider(color: Colors.white10, height: 20),
+              Divider(color: AppColors.divider(context), height: 20),
               _buildToggle('Hipertensi', 'Batasi asupan sodium',
                   Icons.favorite_border_rounded, _hasHypertension,
                   (v) => setState(() => _hasHypertension = v)),
-              const Divider(color: Colors.white10, height: 20),
+              Divider(color: AppColors.divider(context), height: 20),
               _buildToggle('Kolesterol Tinggi', 'Pantau lemak jenuh & trans',
                   Icons.bloodtype_outlined, _hasHighCholesterol,
                   (v) => setState(() => _hasHighCholesterol = v)),
-              const Divider(color: Colors.white10, height: 20),
+              Divider(color: AppColors.divider(context), height: 20),
               _buildToggle('Vegetarian', 'Tandai produk berbahan hewani',
                   Icons.eco_outlined, _isVegetarian,
                   (v) => setState(() => _isVegetarian = v)),
@@ -161,7 +162,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       if (v) _allergies.add(a);
                       else _allergies.remove(a);
                     }),
-                    backgroundColor: Colors.white.withValues(alpha: 0.05),
+                    backgroundColor: AppColors.cardBg(context),
                     selectedColor: const Color(0xFFFF6B6B).withValues(alpha: 0.15),
                     checkmarkColor: const Color(0xFFFF6B6B),
                     labelStyle: GoogleFonts.inter(
@@ -173,7 +174,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       side: BorderSide(
                         color: selected
                             ? const Color(0xFFFF6B6B).withValues(alpha: 0.4)
-                            : Colors.white.withValues(alpha: 0.08),
+                            : AppColors.cardBorder(context),
                       ),
                     ),
                   );
@@ -193,15 +194,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       children: [
         Text(title,
             style: GoogleFonts.poppins(
-              fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white54,
+              fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary(context),
               letterSpacing: 0.3,
             )),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.cardBg(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+            border: Border.all(color: AppColors.cardBorder(context)),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -218,20 +219,20 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     return TextField(
       controller: ctrl,
       keyboardType: keyboardType,
-      style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+      style: GoogleFonts.inter(color: AppColors.textPrimary(context), fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
-        prefixIcon: Icon(icon, color: Colors.white38, size: 20),
+        labelStyle: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 13),
+        prefixIcon: Icon(icon, color: AppColors.textTertiary(context), size: 20),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.04),
+        fillColor: AppColors.cardBg(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderSide: BorderSide(color: AppColors.cardBorder(context)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderSide: BorderSide(color: AppColors.cardBorder(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -250,7 +251,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           decoration: BoxDecoration(
             color: value
                 ? const Color(0xFF4ECDC4).withValues(alpha: 0.12)
-                : Colors.white.withValues(alpha: 0.05),
+                : AppColors.cardBg(context),
             borderRadius: BorderRadius.circular(10),
           ),
           alignment: Alignment.center,
@@ -269,7 +270,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     fontWeight: value ? FontWeight.w600 : FontWeight.normal,
                   )),
               Text(subtitle,
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
             ],
           ),
         ),
@@ -278,8 +279,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           onChanged: onChanged,
           activeColor: const Color(0xFF4ECDC4),
           activeTrackColor: const Color(0xFF4ECDC4).withValues(alpha: 0.3),
-          inactiveThumbColor: Colors.white38,
-          inactiveTrackColor: Colors.white12,
+          inactiveThumbColor: AppColors.switchInactiveThumb(context),
+          inactiveTrackColor: AppColors.switchInactiveTrack(context),
         ),
       ],
     );

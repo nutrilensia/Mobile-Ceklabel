@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/family_profile.dart';
 import '../models/health_profile.dart';
@@ -28,10 +29,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text(
           'Anggota Keluarga',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17),
@@ -78,9 +79,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -103,7 +104,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         title: Text(
           p.name,
           style: GoogleFonts.poppins(
-            fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
+            fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
           ),
         ),
         subtitle: Column(
@@ -111,7 +112,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           children: [
             Text(
               '${p.relationLabel} • ${p.ageGroupLabel}',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)),
             ),
             if (allergies.isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -123,8 +124,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ],
         ),
         trailing: PopupMenuButton<String>(
-          color: const Color(0xFF1A1A2E),
-          icon: const Icon(Icons.more_vert_rounded, color: Colors.white38),
+          color: AppColors.surface(context),
+          icon: Icon(Icons.more_vert_rounded, color: AppColors.textTertiary(context)),
           onSelected: (val) {
             if (val == 'edit') _showAddEditDialog(p);
             if (val == 'delete') _confirmDelete(p);
@@ -132,7 +133,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           itemBuilder: (_) => [
             PopupMenuItem(
               value: 'edit',
-              child: Text('Edit', style: GoogleFonts.inter(color: Colors.white70)),
+              child: Text('Edit', style: GoogleFonts.inter(color: AppColors.textBody(context))),
             ),
             PopupMenuItem(
               value: 'delete',
@@ -161,15 +162,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text('Hapus ${p.name}?',
-            style: GoogleFonts.poppins(color: Colors.white)),
+            style: GoogleFonts.poppins(color: AppColors.textPrimary(context))),
         content: Text(
           'Data anggota keluarga ini akan dihapus.',
-          style: GoogleFonts.inter(color: Colors.white70),
+          style: GoogleFonts.inter(color: AppColors.textBody(context)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.white54)),
+            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary(context))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -212,14 +213,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
             Text(
               'Belum ada anggota keluarga',
               style: GoogleFonts.poppins(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,
+                fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Tambahkan profil keluarga untuk\nmendapat rekomendasi yang lebih personal',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white38, height: 1.5),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textTertiary(context), height: 1.5),
             ),
           ],
         ),
@@ -234,10 +235,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text(msg, textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white54)),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _reload,
@@ -321,8 +322,8 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF12121F),
+      decoration: BoxDecoration(
+        color: AppColors.bottomSheet(context),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
@@ -337,7 +338,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppColors.textQuaternary(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -346,7 +347,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
             Text(
               widget.existing == null ? 'Tambah Anggota' : 'Edit Anggota',
               style: GoogleFonts.poppins(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,
+                fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 20),
@@ -362,7 +363,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
             const SizedBox(height: 16),
             Text(
               'Alergi',
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white54),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context)),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -375,7 +376,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
                   onSelected: (v) => setState(() {
                     if (v) { _allergies.add(a); } else { _allergies.remove(a); }
                   }),
-                  backgroundColor: Colors.white.withValues(alpha: 0.05),
+                  backgroundColor: AppColors.cardBg(context),
                   selectedColor: const Color(0xFFFFAD00).withValues(alpha: 0.15),
                   checkmarkColor: const Color(0xFFFFAD00),
                   labelStyle: GoogleFonts.inter(
@@ -387,7 +388,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
                     side: BorderSide(
                       color: selected
                           ? const Color(0xFFFFAD00).withValues(alpha: 0.4)
-                          : Colors.white.withValues(alpha: 0.08),
+                          : AppColors.cardBorder(context),
                     ),
                   ),
                 );
@@ -447,21 +448,21 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+        Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+          style: GoogleFonts.inter(color: AppColors.textPrimary(context), fontSize: 14),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.06),
+            fillColor: AppColors.cardBorder(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+              borderSide: BorderSide(color: AppColors.cardBorder(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+              borderSide: BorderSide(color: AppColors.cardBorder(context)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -483,22 +484,22 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.inter(fontSize: 13, color: Colors.white54)),
+        Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.cardBorder(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppColors.cardBorder(context)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              dropdownColor: const Color(0xFF1A1A2E),
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white38),
+              dropdownColor: AppColors.dropdownBg(context),
+              style: GoogleFonts.inter(color: AppColors.textPrimary(context), fontSize: 14),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textTertiary(context)),
               onChanged: onChanged,
               items: options.entries
                   .map((e) => DropdownMenuItem(

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -36,10 +37,10 @@ class _CompareScreenState extends State<CompareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text(
           'Bandingkan Produk',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17),
@@ -58,7 +59,7 @@ class _CompareScreenState extends State<CompareScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Menganalisis produk...',
-                    style: GoogleFonts.inter(color: Colors.white54, fontSize: 14),
+                    style: GoogleFonts.inter(color: AppColors.textSecondary(context), fontSize: 14),
                   ),
                 ],
               ),
@@ -120,7 +121,7 @@ class _CompareScreenState extends State<CompareScreen> {
           if (result.personalized) ...[
             const SizedBox(height: 4),
             Text('Disesuaikan dengan profil kesehatanmu',
-                style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
           ],
           if (result.reasons.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -135,7 +136,7 @@ class _CompareScreenState extends State<CompareScreen> {
                       Expanded(
                         child: Text(r,
                             style: GoogleFonts.inter(
-                                fontSize: 12, color: Colors.white70, height: 1.4)),
+                                fontSize: 12, color: AppColors.textBody(context), height: 1.4)),
                       ),
                     ],
                   ),
@@ -154,12 +155,12 @@ class _CompareScreenState extends State<CompareScreen> {
       decoration: BoxDecoration(
         color: p.isRecommended
             ? const Color(0xFF4ECDC4).withValues(alpha: 0.06)
-            : Colors.white.withValues(alpha: 0.04),
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: p.isRecommended
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.08),
+              : AppColors.cardBorder(context),
           width: p.isRecommended ? 1.5 : 1,
         ),
       ),
@@ -188,12 +189,12 @@ class _CompareScreenState extends State<CompareScreen> {
                 Text(
                   p.name,
                   style: GoogleFonts.poppins(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                   ),
                 ),
                 Text(
                   'Skor: ${p.finalScore} (makin rendah makin sehat)',
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                 ),
               ],
             ),
@@ -231,9 +232,9 @@ class _CompareScreenState extends State<CompareScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,11 +244,11 @@ class _CompareScreenState extends State<CompareScreen> {
             child: Text(
               'Perbandingan Nutrisi',
               style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
+                fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
               ),
             ),
           ),
-          const Divider(color: Colors.white12, height: 1),
+          Divider(color: AppColors.divider(context), height: 1),
           ...nutrients.map(
             (n) => _buildNutrientRow(n.$1, n.$2, n.$3, products),
           ),
@@ -264,7 +265,7 @@ class _CompareScreenState extends State<CompareScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+        border: Border(bottom: BorderSide(color: AppColors.cardBg(context))),
       ),
       child: Row(
         children: [
@@ -272,7 +273,7 @@ class _CompareScreenState extends State<CompareScreen> {
             width: 70,
             child: Text(
               label,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)),
             ),
           ),
           ...values.asMap().entries.map((e) {
@@ -302,12 +303,12 @@ class _CompareScreenState extends State<CompareScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text(
               msg,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.white54),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context)),
             ),
             const SizedBox(height: 20),
             ElevatedButton(

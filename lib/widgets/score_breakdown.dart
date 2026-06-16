@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
 
@@ -12,10 +13,10 @@ class ScoreBreakdownWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.cardBorder(context),
         ),
       ),
       child: Column(
@@ -41,7 +42,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ],
@@ -51,11 +52,11 @@ class ScoreBreakdownWidget extends StatelessWidget {
           // Negative points section
           _buildSectionHeader('Poin Negatif', const Color(0xFFFF6B6B)),
           const SizedBox(height: 10),
-          _buildScoreRow('Kalori', breakdown.calories, const Color(0xFFFF6B6B)),
-          _buildScoreRow('Gula', breakdown.sugar, const Color(0xFFFFB347)),
-          _buildScoreRow('Sodium', breakdown.sodium, const Color(0xFF87CEEB)),
-          _buildScoreRow('Lemak Jenuh', breakdown.saturatedFat, const Color(0xFFDDA0DD)),
-          _buildScoreRow('Lemak Trans', breakdown.transFat, const Color(0xFFCC7A7A)),
+          _buildScoreRow(context, 'Kalori', breakdown.calories, const Color(0xFFFF6B6B)),
+          _buildScoreRow(context, 'Gula', breakdown.sugar, const Color(0xFFFFB347)),
+          _buildScoreRow(context, 'Sodium', breakdown.sodium, const Color(0xFF87CEEB)),
+          _buildScoreRow(context, 'Lemak Jenuh', breakdown.saturatedFat, const Color(0xFFDDA0DD)),
+          _buildScoreRow(context, 'Lemak Trans', breakdown.transFat, const Color(0xFFCC7A7A)),
 
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -89,13 +90,13 @@ class ScoreBreakdownWidget extends StatelessWidget {
             ),
           ),
 
-          const Divider(color: Colors.white12, height: 24),
+          Divider(color: AppColors.divider(context), height: 24),
 
           // Positive points section
           _buildSectionHeader('Poin Positif', const Color(0xFF4ECDC4)),
           const SizedBox(height: 10),
-          _buildScoreRow('Serat', breakdown.fiber, const Color(0xFF98D8C8)),
-          _buildScoreRow('Protein', breakdown.protein, const Color(0xFF7EC8E3)),
+          _buildScoreRow(context, 'Serat', breakdown.fiber, const Color(0xFF98D8C8)),
+          _buildScoreRow(context, 'Protein', breakdown.protein, const Color(0xFF7EC8E3)),
 
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -129,7 +130,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
             ),
           ),
 
-          const Divider(color: Colors.white12, height: 24),
+          Divider(color: AppColors.divider(context), height: 24),
 
           // Final score
           Container(
@@ -137,8 +138,8 @@ class ScoreBreakdownWidget extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withValues(alpha: 0.08),
-                  Colors.white.withValues(alpha: 0.03),
+                  AppColors.cardBorder(context),
+                  AppColors.cardBg(context),
                 ],
               ),
               borderRadius: BorderRadius.circular(14),
@@ -151,7 +152,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 Text(
@@ -182,7 +183,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreRow(String name, ScoreDetail detail, Color color) {
+  Widget _buildScoreRow(BuildContext context, String name, ScoreDetail detail, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -193,7 +194,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
               name,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.white60,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ),
@@ -203,7 +204,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
               '${detail.value}',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.white38,
+                color: AppColors.textTertiary(context),
               ),
               textAlign: TextAlign.center,
             ),
@@ -214,7 +215,7 @@ class ScoreBreakdownWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: detail.points > 0
                   ? color.withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.05),
+                  : AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

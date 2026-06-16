@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -145,7 +146,7 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: SafeArea(
         child: Column(
           children: [
@@ -194,13 +195,13 @@ class _ExploreScreenState extends State<ExploreScreen>
           Text(
             'Jelajah Produk',
             style: GoogleFonts.poppins(
-              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white,
+              fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Cari produk lalu tekan ⊕ untuk membandingkan hingga 3 produk sekaligus.',
-            style: GoogleFonts.inter(fontSize: 11, color: Colors.white38, height: 1.4),
+            style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context), height: 1.4),
           ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -231,7 +232,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF4ECDC4))),
                         Text('Foto langsung 2-3 produk, tanpa harus ada di database',
-                            style: GoogleFonts.inter(fontSize: 10, color: Colors.white38)),
+                            style: GoogleFonts.inter(fontSize: 10, color: AppColors.textTertiary(context))),
                       ],
                     ),
                   ),
@@ -250,20 +251,20 @@ class _ExploreScreenState extends State<ExploreScreen>
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppColors.cardBorder(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: TextField(
         controller: _searchCtrl,
-        style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+        style: GoogleFonts.inter(color: AppColors.textPrimary(context), fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Cari produk...',
-          hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
-          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white38),
+          hintStyle: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded, color: AppColors.textTertiary(context)),
           suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, color: Colors.white38),
+                  icon: Icon(Icons.clear_rounded, color: AppColors.textTertiary(context)),
                   onPressed: () {
                     _searchCtrl.clear();
                     _search('');
@@ -311,12 +312,12 @@ class _ExploreScreenState extends State<ExploreScreen>
         decoration: BoxDecoration(
           color: selected
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.05),
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected
                 ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.08),
+                : AppColors.cardBorder(context),
           ),
         ),
         child: Text(
@@ -336,7 +337,7 @@ class _ExploreScreenState extends State<ExploreScreen>
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(12),
         ),
         child: TabBar(
@@ -373,14 +374,14 @@ class _ExploreScreenState extends State<ExploreScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.cloud_off_rounded,
-                  size: 48, color: Colors.white.withValues(alpha: 0.2)),
+                  size: 48, color: AppColors.textQuaternary(context)),
               const SizedBox(height: 16),
               Text('Fitur leaderboard belum tersedia',
                   style: GoogleFonts.poppins(
-                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white38)),
+                      fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textTertiary(context))),
               const SizedBox(height: 8),
               Text('Database produk masih dalam pengembangan',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white24),
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context)),
                   textAlign: TextAlign.center),
               const SizedBox(height: 20),
               TextButton.icon(
@@ -411,7 +412,7 @@ class _ExploreScreenState extends State<ExploreScreen>
       return Center(
         child: Text(
           'Tidak ada hasil untuk "${_searchCtrl.text}"',
-          style: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
+          style: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 14),
         ),
       );
     }
@@ -424,11 +425,11 @@ class _ExploreScreenState extends State<ExploreScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.explore_off_outlined, size: 48, color: Colors.white.withValues(alpha: 0.2)),
+            Icon(Icons.explore_off_outlined, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 12),
             Text(
               'Belum ada data produk',
-              style: GoogleFonts.poppins(color: Colors.white38, fontSize: 14),
+              style: GoogleFonts.poppins(color: AppColors.textTertiary(context), fontSize: 14),
             ),
           ],
         ),
@@ -441,7 +442,7 @@ class _ExploreScreenState extends State<ExploreScreen>
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
           child: Text(
             subtitle,
-            style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context)),
           ),
         ),
         Expanded(
@@ -466,12 +467,12 @@ class _ExploreScreenState extends State<ExploreScreen>
       decoration: BoxDecoration(
         color: isSelected
             ? const Color(0xFF4ECDC4).withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.04),
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSelected
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.07),
+              : AppColors.cardBorder(context),
           width: isSelected ? 1.5 : 1,
         ),
       ),
@@ -480,14 +481,14 @@ class _ExploreScreenState extends State<ExploreScreen>
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: AppColors.cardBg(context),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Text(
               '#$rank',
               style: GoogleFonts.poppins(
-                fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white38,
+                fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textTertiary(context),
               ),
             ),
           ),
@@ -508,7 +509,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   _capitalize(p.category) +
                       (p.scanCount > 0 ? ' • ${p.scanCount}x scan' : ''),
                   style:
-                      GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                      GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                 ),
               ],
             ),
@@ -541,13 +542,13 @@ class _ExploreScreenState extends State<ExploreScreen>
                 color: isSelected
                     ? const Color(0xFF4ECDC4).withValues(alpha: 0.2)
                     : canAdd
-                        ? Colors.white.withValues(alpha: 0.07)
-                        : Colors.white.withValues(alpha: 0.03),
+                        ? AppColors.cardBorder(context)
+                        : AppColors.cardBg(context),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF4ECDC4).withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.12),
+                      : AppColors.inputBorder(context),
                   width: 1.5,
                 ),
               ),

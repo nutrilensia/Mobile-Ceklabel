@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/gamification.dart';
 
@@ -20,7 +21,7 @@ class GamificationFeedback {
                 '+${gami.pointsEarned} poin'
                 '${gami.currentStreak > 1 ? '  🔥 ${gami.currentStreak} hari beruntun' : ''}',
                 style: GoogleFonts.inter(
-                    fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
+                    fontSize: 13, color: AppColors.textPrimary(context), fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -56,10 +57,10 @@ class GamificationFeedback {
           child: Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1A1A2E), Color(0xFF0D2B2B)],
+                colors: AppColors.intakeGradient(context),
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFFFFAD00).withValues(alpha: 0.4)),
@@ -70,7 +71,7 @@ class GamificationFeedback {
                 Text(
                   badges.length > 1 ? '🎉 ${badges.length} Badge Baru!' : '🎉 Badge Baru!',
                   style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context)),
                 ),
                 const SizedBox(height: 20),
                 ...badges.map((b) => Padding(
@@ -96,10 +97,10 @@ class GamificationFeedback {
                                     style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white)),
+                                        color: AppColors.textPrimary(context))),
                                 Text(b.description,
                                     style: GoogleFonts.inter(
-                                        fontSize: 11, color: Colors.white54)),
+                                        fontSize: 11, color: AppColors.textSecondary(context))),
                               ],
                             ),
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/diary_day.dart';
 import '../models/family_profile.dart';
@@ -82,10 +83,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text('Diary Gizi',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17)),
         elevation: 0,
@@ -156,12 +157,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
         decoration: BoxDecoration(
           color: selected
               ? const Color(0xFF4ECDC4).withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.05),
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: selected
                   ? const Color(0xFF4ECDC4).withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.08)),
+                  : AppColors.cardBorder(context)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -191,14 +192,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
       margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, color: Colors.white54),
+            icon: Icon(Icons.chevron_left_rounded, color: AppColors.textSecondary(context)),
             onPressed: () => _changeDay(-1),
             splashRadius: 20,
           ),
@@ -208,14 +209,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
               child: Column(
                 children: [
                   Text(_isToday ? 'Hari Ini' : 'Tanggal Dipilih',
-                      style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
                   const SizedBox(height: 2),
                   Text(formatted,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white)),
+                          color: AppColors.textPrimary(context))),
                 ],
               ),
             ),
@@ -251,7 +252,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
               const SizedBox(width: 8),
               Text('${day.entryCount} item dikonsumsi',
                   style: GoogleFonts.poppins(
-                      fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 12),
@@ -285,7 +286,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
               const SizedBox(width: 8),
               Text('Asupan ${day.profileName}',
                   style: GoogleFonts.poppins(
-                      fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                      fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             ],
           ),
           const SizedBox(height: 16),
@@ -298,7 +299,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           _intakeRow('Lemak jenuh', day.fatSaturated, 'g', const Color(0xFFAD7BFF)),
           const SizedBox(height: 8),
           Text('Batas berdasarkan AKG BPOM untuk profil ini',
-              style: GoogleFonts.inter(fontSize: 10, color: Colors.white24)),
+              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textQuaternary(context))),
         ],
       ),
     );
@@ -317,7 +318,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: GoogleFonts.inter(fontSize: 13, color: Colors.white70)),
+            Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textBody(context))),
             Row(
               children: [
                 if (over)
@@ -343,7 +344,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: ratio,
-                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+                  backgroundColor: AppColors.cardBorder(context),
                   valueColor: AlwaysStoppedAnimation(c),
                   minHeight: 7,
                 ),
@@ -418,9 +419,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border: Border.all(color: AppColors.cardBorder(context)),
         ),
         child: Row(
           children: [
@@ -444,19 +445,19 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 children: [
                   Text(item.productName,
                       style: GoogleFonts.inter(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context)),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 3),
                   Text(
                     '${item.servings == item.servings.toInt() ? item.servings.toInt() : item.servings} porsi • '
                     '${item.totalCalories.round()} kkal • Gula ${item.totalSugar.round()}g',
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Text(time, style: GoogleFonts.inter(fontSize: 11, color: Colors.white30)),
+            Text(time, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textQuaternary(context))),
           ],
         ),
       ),
@@ -469,13 +470,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         title: Text('Hapus dari diary?',
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+            style: GoogleFonts.poppins(color: AppColors.textPrimary(context), fontSize: 16)),
         content: Text('${item.productName} akan dihapus dari catatan hari ini.',
-            style: GoogleFonts.inter(color: Colors.white60)),
+            style: GoogleFonts.inter(color: AppColors.textSecondary(context))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.white54)),
+            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary(context))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -504,22 +505,22 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.no_meals_rounded, size: 40, color: Colors.white24),
+          Icon(Icons.no_meals_rounded, size: 40, color: AppColors.textQuaternary(context)),
           const SizedBox(height: 12),
           Text(_isToday ? 'Belum ada yang dicatat hari ini' : 'Tidak ada catatan',
               style: GoogleFonts.inter(
-                  fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white54)),
+                  fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary(context))),
           const SizedBox(height: 6),
           Text(
             'Scan produk lalu tekan "Catat ke Diary Gizi"\nuntuk memantau asupan harian',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 12, color: Colors.white30, height: 1.5),
+            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context), height: 1.5),
           ),
         ],
       ),
@@ -533,16 +534,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_outline_rounded, size: 56, color: Colors.white24),
+            Icon(Icons.lock_outline_rounded, size: 56, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text('Masuk untuk melihat Diary',
                 style: GoogleFonts.poppins(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             const SizedBox(height: 8),
             Text(
               'Catat konsumsi harian dan pantau asupan\ngula, natrium, & kalori vs batas AKG',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white38, height: 1.5),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textTertiary(context), height: 1.5),
             ),
           ],
         ),
@@ -557,11 +558,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text(msg,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white54)),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _reload,

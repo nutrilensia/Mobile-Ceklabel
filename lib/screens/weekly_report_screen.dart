@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -47,10 +48,10 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0F),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.scaffold(context),
+        foregroundColor: AppColors.appBarForeground(context),
         title: Text('Laporan Mingguan',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17)),
         elevation: 0,
@@ -106,14 +107,14 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.cardBorder(context)),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, color: Colors.white54),
+            icon: Icon(Icons.chevron_left_rounded, color: AppColors.textSecondary(context)),
             onPressed: () => _changeWeek(-1),
             splashRadius: 20,
           ),
@@ -121,7 +122,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             child: Text(_isThisWeek ? 'Minggu Ini' : 'Mulai $_startStr',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
           ),
           IconButton(
             icon: Icon(Icons.chevron_right_rounded,
@@ -189,9 +190,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
               children: [
                 Text('${r.profileName} • ${r.periodStart} – ${r.periodEnd}',
                     style: GoogleFonts.poppins(
-                        fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                        fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
                 Text('${r.totalEntries} catatan konsumsi',
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
               ],
             ),
           ),
@@ -204,7 +205,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF4ECDC4))),
               Text('hari tercatat',
-                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
             ],
           ),
         ],
@@ -218,7 +219,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       children: [
         Text('Rata-rata Harian vs Batas AKG',
             style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBody(context))),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -257,29 +258,29 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: over
                 ? displayColor.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.07)),
+                : AppColors.cardBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 11, color: Colors.white54)),
+          Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary(context))),
           const SizedBox(height: 4),
           Text(val.round().toString(),
               style: GoogleFonts.poppins(
                   fontSize: 20, fontWeight: FontWeight.bold, color: displayColor)),
           Text('/ ${limit.round()} $unit',
-              style: GoogleFonts.inter(fontSize: 10, color: Colors.white38)),
+              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textTertiary(context))),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (pct / 100).clamp(0.0, 1.0),
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              backgroundColor: AppColors.cardBorder(context),
               valueColor: AlwaysStoppedAnimation<Color>(displayColor),
               minHeight: 5,
             ),
@@ -301,14 +302,14 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       children: [
         Text('Distribusi Nutri-Score Produk',
             style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBody(context))),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.cardBg(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+            border: Border.all(color: AppColors.cardBorder(context)),
           ),
           child: Column(
             children: ['A', 'B', 'C', 'D', 'E'].map((g) {
@@ -344,7 +345,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: pct,
-                backgroundColor: Colors.white.withValues(alpha: 0.06),
+                backgroundColor: AppColors.cardBorder(context),
                 valueColor: AlwaysStoppedAnimation<Color>(color.withValues(alpha: 0.7)),
                 minHeight: 7,
               ),
@@ -365,7 +366,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             width: 18,
             child: Text('$count',
                 textAlign: TextAlign.right,
-                style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
           ),
         ],
       ),
@@ -379,7 +380,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       children: [
         Text(title,
             style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBody(context))),
         const SizedBox(height: 12),
         ...items.asMap().entries.map((e) {
           final i = e.key;
@@ -388,18 +389,18 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              border: Border.all(color: AppColors.cardBorder(context)),
             ),
             child: Row(
               children: [
                 Text('${i + 1}',
-                    style: GoogleFonts.inter(fontSize: 12, color: Colors.white24)),
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(item.productName,
-                      style: GoogleFonts.inter(fontSize: 13, color: Colors.white70),
+                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.textBody(context)),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
                 Text('${item.total.round()} $unit',
@@ -409,7 +410,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 6),
                     child: Text('×${item.times}',
-                        style: GoogleFonts.inter(fontSize: 11, color: Colors.white30)),
+                        style: GoogleFonts.inter(fontSize: 11, color: AppColors.textQuaternary(context))),
                   ),
               ],
             ),
@@ -425,15 +426,15 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       children: [
         Text('Catatan Minggu Ini',
             style: GoogleFonts.poppins(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textBody(context))),
         const SizedBox(height: 12),
         ...r.insights.map((insight) => Container(
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: AppColors.cardBg(context),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+                border: Border.all(color: AppColors.cardBorder(context)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +445,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                   Expanded(
                     child: Text(insight,
                         style: GoogleFonts.inter(
-                            fontSize: 13, color: Colors.white70, height: 1.4)),
+                            fontSize: 13, color: AppColors.textBody(context), height: 1.4)),
                   ),
                 ],
               ),
@@ -781,7 +782,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                       child: CircularProgressIndicator(
                         value: r.lifestyleScore / 100,
                         strokeWidth: 7,
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.cardBorder(context),
                         valueColor: AlwaysStoppedAnimation<Color>(color),
                         strokeCap: StrokeCap.round,
                       ),
@@ -798,7 +799,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                         ),
                         Text('/100',
                             style: GoogleFonts.inter(
-                                fontSize: 10, color: Colors.white38)),
+                                fontSize: 10, color: AppColors.textTertiary(context))),
                       ],
                     ),
                   ],
@@ -813,7 +814,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white)),
+                            color: AppColors.textPrimary(context))),
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -830,7 +831,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                     const SizedBox(height: 8),
                     Text('Berdasarkan pola konsumsi & konsistensi diary minggu ini',
                         style: GoogleFonts.inter(
-                            fontSize: 11, color: Colors.white38, height: 1.4)),
+                            fontSize: 11, color: AppColors.textTertiary(context), height: 1.4)),
                   ],
                 ),
               ),
@@ -838,7 +839,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           ),
           if (bd != null) ...[
             const SizedBox(height: 16),
-            const Divider(color: Colors.white12, height: 1),
+            Divider(color: AppColors.divider(context), height: 1),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -866,7 +867,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           const SizedBox(height: 2),
           Text(label,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 9, color: Colors.white38, height: 1.3)),
+              style: GoogleFonts.inter(fontSize: 9, color: AppColors.textTertiary(context), height: 1.3)),
         ],
       ),
     );
@@ -890,12 +891,12 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             const SizedBox(height: 20),
             Text('Belum ada catatan minggu ini',
                 style: GoogleFonts.poppins(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
             const SizedBox(height: 8),
             Text(
               'Catat konsumsi lewat "Catat ke Diary Gizi"\nsetelah scan, lalu laporan mingguan terbentuk otomatis',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white38, height: 1.5),
+              style: GoogleFonts.inter(fontSize: 13, color: AppColors.textTertiary(context), height: 1.5),
             ),
           ],
         ),
@@ -910,11 +911,11 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text(msg,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white54)),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _load,

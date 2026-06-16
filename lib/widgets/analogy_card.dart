@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/scan_result.dart';
 
@@ -58,7 +59,7 @@ class AnalogyCard extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ],
@@ -129,7 +130,7 @@ class AnalogyCard extends StatelessWidget {
                           item.description,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: Colors.white70,
+                            color: AppColors.textBody(context),
                             height: 1.4,
                           ),
                         ),

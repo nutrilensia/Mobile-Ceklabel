@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/history_item.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../theme/app_colors.dart';
 import 'result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -78,14 +79,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dialogBg(ctx),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Keluar?', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-        content: Text('Kamu akan keluar dari akun ini.', style: GoogleFonts.inter(color: Colors.white60)),
+        title: Text('Keluar?', style: GoogleFonts.poppins(color: AppColors.dialogText(ctx), fontWeight: FontWeight.w600)),
+        content: Text('Kamu akan keluar dari akun ini.', style: GoogleFonts.inter(color: AppColors.textSecondary(ctx))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: GoogleFonts.inter(color: Colors.white54)),
+            child: Text('Batal', style: GoogleFonts.inter(color: AppColors.textSecondary(ctx))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -134,12 +135,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final user = AuthService().currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppColors.scaffold(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
-            backgroundColor: const Color(0xFF0A0A0F),
+            backgroundColor: AppColors.scaffold(context),
             expandedHeight: 100,
             pinned: true,
             automaticallyImplyLeading: false,
@@ -153,22 +154,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Riwayat Scan', style: GoogleFonts.poppins(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,
+                    fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                   )),
                   if (user != null)
                     Text(user.name.isNotEmpty ? user.name : user.email,
-                      style: GoogleFonts.inter(fontSize: 10, color: Colors.white38)),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.textTertiary(context))),
                 ],
               ),
             ),
             actions: [
               IconButton(
                 onPressed: _reload,
-                icon: const Icon(Icons.refresh_rounded, color: Colors.white38, size: 22),
+                icon: Icon(Icons.refresh_rounded, color: AppColors.textTertiary(context), size: 22),
               ),
               IconButton(
                 onPressed: _confirmLogout,
-                icon: const Icon(Icons.logout_rounded, color: Colors.white38, size: 22),
+                icon: Icon(Icons.logout_rounded, color: AppColors.textTertiary(context), size: 22),
               ),
             ],
           ),
@@ -209,18 +210,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: AppColors.cardBg(context),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.history_rounded, size: 56, color: Colors.white24),
+            child: Icon(Icons.history_rounded, size: 56, color: AppColors.textQuaternary(context)),
           ),
           const SizedBox(height: 20),
           Text('Belum ada riwayat scan', style: GoogleFonts.poppins(
-            fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white54,
+            fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textSecondary(context),
           )),
           const SizedBox(height: 8),
           Text('Hasil scan akan tersimpan otomatis di sini',
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.white30)),
+            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textQuaternary(context))),
         ],
       ),
     );
@@ -233,13 +234,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.white24),
+            Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.textQuaternary(context)),
             const SizedBox(height: 16),
             Text('Gagal memuat riwayat', style: GoogleFonts.poppins(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white54,
+              fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context),
             )),
             const SizedBox(height: 8),
-            Text(message, style: GoogleFonts.inter(fontSize: 12, color: Colors.white30),
+            Text(message, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context)),
               textAlign: TextAlign.center),
             const SizedBox(height: 20),
             TextButton.icon(
@@ -276,9 +277,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: AppColors.cardBg(context),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppColors.cardBorder(context)),
           ),
           child: Row(
             children: [
@@ -306,7 +307,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       item.productName.isEmpty ? 'Produk tidak diketahui' : item.productName,
                       style: GoogleFonts.poppins(
-                        fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
+                        fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -314,23 +315,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.local_fire_department_rounded,
-                            size: 13, color: Colors.white38),
+                        Icon(Icons.local_fire_department_rounded,
+                            size: 13, color: AppColors.textTertiary(context)),
                         const SizedBox(width: 3),
                         Text('${item.calories.round()} kkal',
-                          style: GoogleFonts.inter(fontSize: 12, color: Colors.white38)),
+                          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary(context))),
                         const SizedBox(width: 10),
-                        const Icon(Icons.access_time_rounded, size: 13, color: Colors.white24),
+                        Icon(Icons.access_time_rounded, size: 13, color: AppColors.textQuaternary(context)),
                         const SizedBox(width: 3),
                         Text(_formatDate(item.scannedAt),
-                          style: GoogleFonts.inter(fontSize: 12, color: Colors.white24)),
+                          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textQuaternary(context))),
                       ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
+              Icon(Icons.chevron_right_rounded, color: AppColors.textQuaternary(context), size: 20),
             ],
           ),
         ),
