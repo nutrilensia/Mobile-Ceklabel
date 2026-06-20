@@ -172,7 +172,7 @@ class _ExploreScreenState extends State<ExploreScreen>
               },
               backgroundColor: _compareList.length >= 2
                   ? const Color(0xFF4ECDC4)
-                  : Colors.white24,
+                  : AppColors.disabledBg(context),
               foregroundColor: Colors.black,
               icon: const Icon(Icons.compare_arrows_rounded),
               label: Text(
@@ -324,7 +324,7 @@ class _ExploreScreenState extends State<ExploreScreen>
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: selected ? const Color(0xFF4ECDC4) : Colors.white60,
+            color: selected ? const Color(0xFF4ECDC4) : AppColors.textSecondary(context),
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -349,7 +349,7 @@ class _ExploreScreenState extends State<ExploreScreen>
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           labelColor: const Color(0xFF4ECDC4),
-          unselectedLabelColor: Colors.white38,
+          unselectedLabelColor: AppColors.textSecondary(context),
           labelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
           unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13),
           dividerColor: Colors.transparent,
@@ -501,7 +501,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   p.name,
                   style: GoogleFonts.poppins(
                     fontSize: 13, fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : Colors.white,
+                    color: isSelected ? const Color(0xFF4ECDC4) : AppColors.textPrimary(context),
                   ),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
@@ -561,8 +561,8 @@ class _ExploreScreenState extends State<ExploreScreen>
                 color: isSelected
                     ? const Color(0xFF4ECDC4)
                     : canAdd
-                        ? Colors.white54
-                        : Colors.white.withValues(alpha: 0.2),
+                        ? AppColors.iconDefault(context)
+                        : AppColors.iconInactive(context),
               ),
             ),
           ),

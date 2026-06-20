@@ -535,7 +535,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-                  pw.Text('CekLabel',
+                  pw.Text('NutriLens',
                       style: pw.TextStyle(
                           fontSize: 22, fontWeight: pw.FontWeight.bold, color: teal)),
                   pw.Text('Laporan Gizi Mingguan',
@@ -690,7 +690,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           pw.Divider(color: PdfColors.grey700),
           pw.SizedBox(height: 6),
           pw.Text(
-              'Laporan dari catatan mandiri di aplikasi CekLabel — bukan pengganti konsultasi medis. '
+              'Laporan dari catatan mandiri di aplikasi NutriLens — bukan pengganti konsultasi medis. '
               'Batas harian mengacu pada AKG BPOM/Kemenkes.',
               style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
         ],

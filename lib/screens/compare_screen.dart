@@ -81,7 +81,9 @@ class _CompareScreenState extends State<CompareScreen> {
         if (result.recommendedName != null)
           _buildRecommendationCard(result),
         const SizedBox(height: 16),
-        ...result.products.map((p) => _buildProductCard(p)),
+        ...result.products.asMap().entries.map(
+          (e) => _buildProductCard(e.value, index: e.key),
+        ),
         const SizedBox(height: 16),
         _buildNutritionTable(result.products),
       ],
@@ -147,8 +149,9 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildProductCard(CompareProduct p) {
+  Widget _buildProductCard(CompareProduct p, {required int index}) {
     final gradeColor = _gradeColor(p.nutriScore);
+    final label = ['A', 'B', 'C'][index < 3 ? index : 0];
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -166,6 +169,23 @@ class _CompareScreenState extends State<CompareScreen> {
       ),
       child: Row(
         children: [
+          // Produk A / B / C badge
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
@@ -187,10 +207,19 @@ class _CompareScreenState extends State<CompareScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  'Produk $label',
+                  style: GoogleFonts.inter(
+                    fontSize: 11, fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
                   p.name,
                   style: GoogleFonts.poppins(
                     fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Skor: ${p.finalScore} (makin rendah makin sehat)',
@@ -249,6 +278,31 @@ class _CompareScreenState extends State<CompareScreen> {
             ),
           ),
           Divider(color: AppColors.divider(context), height: 1),
+          // Column headers: label | Produk A | Produk B | Produk C
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppColors.primary.withValues(alpha: 0.05),
+            child: Row(
+              children: [
+                const SizedBox(width: 70),
+                ...List.generate(products.length, (i) {
+                  final letters = ['A', 'B', 'C'];
+                  return Expanded(
+                    child: Text(
+                      'Produk ${letters[i]}',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.divider(context), height: 1),
           ...nutrients.map(
             (n) => _buildNutrientRow(n.$1, n.$2, n.$3, products),
           ),
@@ -286,7 +340,7 @@ class _CompareScreenState extends State<CompareScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: isBest ? FontWeight.w600 : FontWeight.normal,
-                  color: isBest ? const Color(0xFF4ECDC4) : Colors.white70,
+                  color: isBest ? const Color(0xFF4ECDC4) : AppColors.textBody(context),
                 ),
               ),
             );

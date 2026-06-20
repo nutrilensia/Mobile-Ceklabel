@@ -114,6 +114,41 @@ class _FamilyScreenState extends State<FamilyScreen> {
               '${p.relationLabel} • ${p.ageGroupLabel}',
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)),
             ),
+            // kondisi kesehatan aktif
+            Builder(builder: (context) {
+              final chips = <String>[];
+              if (p.conditions['hasDiabetes'] == true) chips.add('Diabetes');
+              if (p.conditions['hasHypertension'] == true) chips.add('Hipertensi');
+              if (p.conditions['hasHighCholesterol'] == true) chips.add('Kolesterol');
+              if (p.conditions['isVegetarian'] == true) chips.add('Vegetarian');
+              if (chips.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Wrap(
+                  spacing: 5, runSpacing: 4,
+                  children: chips.map((c) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4ECDC4).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.25)),
+                    ),
+                    child: Text(c,
+                        style: GoogleFonts.inter(
+                            fontSize: 10, color: const Color(0xFF4ECDC4),
+                            fontWeight: FontWeight.w500)),
+                  )).toList(),
+                ),
+              );
+            }),
+            // batas kalori custom
+            if (p.effectiveDailyLimits?['calories'] != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                '🔥 Target: ${p.effectiveDailyLimits!['calories']} kkal/hari',
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
+              ),
+            ],
             if (allergies.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
@@ -265,26 +300,41 @@ class _FamilyFormSheet extends StatefulWidget {
 
 class _FamilyFormSheetState extends State<_FamilyFormSheet> {
   final _nameCtrl = TextEditingController();
+  final _calorieCtrl = TextEditingController();
   String _relation = 'anak';
   String _ageGroup = 'child';
   final List<String> _allergies = [];
+  bool _hasDiabetes = false;
+  bool _hasHypertension = false;
+  bool _hasHighCholesterol = false;
+  bool _isVegetarian = false;
   bool _loading = false;
   String? _errorMsg;
 
   @override
   void initState() {
     super.initState();
-    if (widget.existing != null) {
-      _nameCtrl.text = widget.existing!.name;
-      _relation = widget.existing!.relation;
-      _ageGroup = widget.existing!.ageGroup;
-      _allergies.addAll(widget.existing!.allergyList);
+    final e = widget.existing;
+    if (e != null) {
+      _nameCtrl.text = e.name;
+      _relation = e.relation;
+      _ageGroup = e.ageGroup;
+      _allergies.addAll(e.allergyList);
+      final c = e.conditions;
+      _hasDiabetes = c['hasDiabetes'] == true;
+      _hasHypertension = c['hasHypertension'] == true;
+      _hasHighCholesterol = c['hasHighCholesterol'] == true;
+      _isVegetarian = c['isVegetarian'] == true;
+      // tampilkan custom calorie jika ada
+      final cal = e.effectiveDailyLimits?['calories'];
+      if (cal != null) _calorieCtrl.text = cal.toString();
     }
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _calorieCtrl.dispose();
     super.dispose();
   }
 
@@ -292,21 +342,34 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
     if (_nameCtrl.text.trim().isEmpty) return;
     setState(() => _loading = true);
     try {
-      final conditions = <String, dynamic>{'allergies': _allergies};
+      final conditions = <String, dynamic>{
+        'allergies': _allergies,
+        if (_hasDiabetes) 'hasDiabetes': true,
+        if (_hasHypertension) 'hasHypertension': true,
+        if (_hasHighCholesterol) 'hasHighCholesterol': true,
+        if (_isVegetarian) 'isVegetarian': true,
+      };
+      final cal = int.tryParse(_calorieCtrl.text.trim());
+      final customLimits = cal != null && cal > 0 ? {'calories': cal} : null;
+
+      final payload = <String, dynamic>{
+        'name': _nameCtrl.text.trim(),
+        'relation': _relation,
+        'ageGroup': _ageGroup,
+        'conditions': conditions,
+        if (customLimits != null) 'customLimits': customLimits,
+      };
+
       if (widget.existing == null) {
         await ApiService().addFamilyProfile(
-          name: _nameCtrl.text.trim(),
-          relation: _relation,
-          ageGroup: _ageGroup,
+          name: payload['name'] as String,
+          relation: payload['relation'] as String,
+          ageGroup: payload['ageGroup'] as String,
           conditions: conditions,
+          customLimits: customLimits,
         );
       } else {
-        await ApiService().updateFamilyProfile(widget.existing!.id, {
-          'name': _nameCtrl.text.trim(),
-          'relation': _relation,
-          'ageGroup': _ageGroup,
-          'conditions': conditions,
-        });
+        await ApiService().updateFamilyProfile(widget.existing!.id, payload);
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -360,6 +423,66 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
             _buildDropdown('Kelompok Usia', _ageGroup, kAgeGroupLabels, (v) {
               if (v != null) setState(() => _ageGroup = v);
             }),
+            const SizedBox(height: 16),
+            // ── Kondisi Kesehatan ───────────────────────────────────────────
+            Text('Kondisi Kesehatan',
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardBg(context),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.cardBorder(context)),
+              ),
+              child: Column(
+                children: [
+                  _buildConditionTile('Diabetes', Icons.monitor_heart_outlined,
+                      _hasDiabetes, (v) => setState(() => _hasDiabetes = v)),
+                  Divider(height: 1, color: AppColors.divider(context)),
+                  _buildConditionTile('Hipertensi', Icons.favorite_border_rounded,
+                      _hasHypertension, (v) => setState(() => _hasHypertension = v)),
+                  Divider(height: 1, color: AppColors.divider(context)),
+                  _buildConditionTile('Kolesterol Tinggi', Icons.bloodtype_outlined,
+                      _hasHighCholesterol, (v) => setState(() => _hasHighCholesterol = v)),
+                  Divider(height: 1, color: AppColors.divider(context)),
+                  _buildConditionTile('Vegetarian', Icons.eco_outlined,
+                      _isVegetarian, (v) => setState(() => _isVegetarian = v)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ── Target Kalori Harian ────────────────────────────────────────
+            Text('Target Kalori Harian (opsional)',
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _calorieCtrl,
+              keyboardType: TextInputType.number,
+              style: GoogleFonts.inter(color: AppColors.textPrimary(context), fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Kosongkan = gunakan AKG default',
+                hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.textQuaternary(context)),
+                prefixIcon: Icon(Icons.local_fire_department_outlined,
+                    color: AppColors.textTertiary(context), size: 20),
+                suffixText: 'kkal',
+                suffixStyle: GoogleFonts.inter(color: AppColors.textTertiary(context), fontSize: 13),
+                filled: true,
+                fillColor: AppColors.cardBorder(context),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.cardBorder(context)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.cardBorder(context)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF4ECDC4), width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               'Alergi',
@@ -440,6 +563,46 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildConditionTile(
+      String label, IconData icon, bool value, void Function(bool) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              color: value
+                  ? const Color(0xFF4ECDC4).withValues(alpha: 0.12)
+                  : AppColors.scaffold(context),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 16,
+                color: value ? const Color(0xFF4ECDC4) : AppColors.textTertiary(context)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: value ? AppColors.textPrimary(context) : AppColors.textSecondary(context),
+                  fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                )),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF4ECDC4),
+            activeTrackColor: const Color(0xFF4ECDC4).withValues(alpha: 0.3),
+            inactiveThumbColor: AppColors.switchInactiveThumb(context),
+            inactiveTrackColor: AppColors.switchInactiveTrack(context),
+          ),
+        ],
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'services/auth_service.dart';
 import 'services/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +37,7 @@ class CekLabelApp extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
-      title: 'CekLabel',
+      title: 'NutriLens',
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.mode,
       theme: ThemeData(
@@ -74,7 +75,9 @@ class CekLabelApp extends StatelessWidget {
         ThemeProvider.updateSystemUI(brightness);
         return child!;
       },
-      home: showOnboarding ? const OnboardingScreen() : const HomeScreen(),
+      home: SplashScreen(
+        next: showOnboarding ? const OnboardingScreen() : const HomeScreen(),
+      ),
     );
   }
 }

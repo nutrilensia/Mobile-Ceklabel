@@ -26,15 +26,19 @@ class _ChatScreenState extends State<ChatScreen> {
   // Surface/bg colors now from AppColors
   
 
+  static const _greeting = 'Halo! Saya Asisten Gizi NutriLens. Saya bisa bantu kamu memahami label makanan, menganalisis pola makan, atau menjawab pertanyaan seputar nutrisi. Ada yang ingin kamu tanyakan?';
+
   @override
   void initState() {
     super.initState();
     _selectedProfile = widget.initialProfile;
-    // Greeting from assistant
-    _messages.add(ChatMessage(
-      role: 'assistant',
-      content: 'Halo! Saya Asisten Gizi CekLabel. Saya bisa bantu kamu memahami label makanan, menganalisis pola makan, atau menjawab pertanyaan seputar nutrisi. Ada yang ingin kamu tanyakan?',
-    ));
+    final cached = ApiService().chatHistory;
+    if (cached.isNotEmpty) {
+      _messages.addAll(cached);
+    } else {
+      _messages.add(ChatMessage(role: 'assistant', content: _greeting));
+      ApiService().chatHistory = List.from(_messages);
+    }
   }
 
   @override
@@ -53,6 +57,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.add(userMsg);
       _isLoading = true;
     });
+    _saveHistory();
     _controller.clear();
     _scrollToBottom();
 
@@ -61,19 +66,25 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages,
         profileId: _selectedProfile?.id,
       );
-      if (mounted) setState(() => _messages.add(reply));
+      if (mounted) {
+        setState(() => _messages.add(reply));
+        _saveHistory();
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _messages.add(ChatMessage(
           role: 'assistant',
           content: 'Maaf, terjadi kesalahan. Silakan coba lagi.',
         )));
+        _saveHistory();
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
       _scrollToBottom();
     }
   }
+
+  void _saveHistory() => ApiService().chatHistory = List.from(_messages);
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -136,13 +147,16 @@ class _ChatScreenState extends State<ChatScreen> {
             IconButton(
               icon: Icon(Icons.refresh_rounded, color: AppColors.textSecondary(context), size: 20),
               tooltip: 'Mulai percakapan baru',
-              onPressed: () => setState(() {
-                _messages.clear();
-                _messages.add(ChatMessage(
-                  role: 'assistant',
-                  content: 'Percakapan baru dimulai. Ada yang ingin kamu tanyakan?',
-                ));
-              }),
+              onPressed: () {
+                setState(() {
+                  _messages.clear();
+                  _messages.add(ChatMessage(
+                    role: 'assistant',
+                    content: 'Percakapan baru dimulai. Ada yang ingin kamu tanyakan?',
+                  ));
+                });
+                _saveHistory();
+              },
             ),
           const SizedBox(width: 4),
         ],
@@ -212,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 content,
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppColors.textPrimary(context),
                   height: 1.5,
                 ),
               ),
@@ -357,7 +371,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                color: _isLoading ? Colors.white12 : null,
+                color: _isLoading ? AppColors.disabledBg(context) : null,
                 shape: BoxShape.circle,
               ),
               child: _isLoading

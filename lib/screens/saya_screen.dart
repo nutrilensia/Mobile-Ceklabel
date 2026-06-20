@@ -24,11 +24,16 @@ class SayaScreen extends StatefulWidget {
 
 class _SayaScreenState extends State<SayaScreen> {
   GamificationStats? _stats;
+  String? _lastUserId;
 
   @override
   void initState() {
     super.initState();
-    if (AuthService().isLoggedIn) _loadStats();
+    final user = AuthService().currentUser;
+    if (user != null) {
+      _lastUserId = user.id;
+      _loadStats();
+    }
   }
 
   Future<void> _loadStats() async {
@@ -72,7 +77,24 @@ class _SayaScreenState extends State<SayaScreen> {
       initialData: AuthService().currentUser,
       builder: (context, snap) {
         final user = snap.data;
-        if (user == null) return _buildLoginGate();
+        if (user == null) {
+          // User logged out — clear cached stats
+          if (_lastUserId != null) {
+            _lastUserId = null;
+            _stats = null;
+          }
+          return _buildLoginGate();
+        }
+        // New account logged in — reload stats
+        if (user.id != _lastUserId) {
+          _lastUserId = user.id;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _stats = null);
+              _loadStats();
+            }
+          });
+        }
         return _buildPage(user.name, user.email);
       },
     );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import '../theme/app_colors.dart';
+import '../services/auth_service.dart';
 import 'scanner_screen.dart';
 import 'diary_screen.dart';
 import 'explore_screen.dart';
 import 'saya_screen.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,18 +35,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffold(context),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          ScannerScreen(visibilityNotifier: _scannerVisibility),
-          DiaryScreen(key: ValueKey('diary_$_diaryKey')),
-          ExploreScreen(key: ValueKey('explore_$_exploreKey')),
-          SayaScreen(key: ValueKey('saya_$_sayaKey')),
-        ],
+    return StreamBuilder(
+      stream: AuthService().authStateChanges,
+      initialData: AuthService().currentUser,
+      builder: (context, snap) {
+        final isLoggedIn = snap.data != null;
+        final showChatFab = isLoggedIn && _selectedIndex != 0;
+
+        return Scaffold(
+          backgroundColor: AppColors.scaffold(context),
+          body: IndexedStack(
+            index: _selectedIndex,
+            children: [
+              ScannerScreen(visibilityNotifier: _scannerVisibility),
+              DiaryScreen(key: ValueKey('diary_$_diaryKey')),
+              ExploreScreen(key: ValueKey('explore_$_exploreKey')),
+              SayaScreen(key: ValueKey('saya_$_sayaKey')),
+            ],
+          ),
+          floatingActionButton: showChatFab ? _buildChatFab(context) : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          bottomNavigationBar: _buildNavBar(),
+        );
+      },
+    );
+  }
+
+  Widget _buildChatFab(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ChatScreen()),
       ),
-      bottomNavigationBar: _buildNavBar(),
+      backgroundColor: const Color(0xFF4ECDC4),
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
+      label: Text(
+        'Tanya Gizi',
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+      ),
     );
   }
 

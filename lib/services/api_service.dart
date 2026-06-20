@@ -39,9 +39,13 @@ class ApiService {
   // Cache ringan profil keluarga (sering dipakai scanner/diary/result).
   List<FamilyProfile>? _familyCache;
 
+  // Histori percakapan Asisten Gizi — persist selama sesi app berjalan.
+  List<ChatMessage> chatHistory = [];
+
   /// Kosongkan semua cache (dipanggil saat ganti akun).
   void clearCaches() {
     _familyCache = null;
+    chatHistory = [];
   }
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -74,6 +78,26 @@ class ApiService {
       AuthService().setFromLogin(
         data['token'] as String,
         UserModel.fromJson(data['user'] as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
+  Future<String> forgotPassword(String email) async {
+    try {
+      final res = await _dio.post('$baseUrl/api/auth/forgot-password', data: {'email': email});
+      return (res.data['data']?['resetToken'] as String?) ?? '';
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      await _dio.post(
+        '$baseUrl/api/auth/reset-password',
+        data: {'token': token, 'newPassword': newPassword},
       );
     } on DioException catch (e) {
       throw ApiException(_parseError(e));
@@ -223,6 +247,7 @@ class ApiService {
     required String relation,
     required String ageGroup,
     Map<String, dynamic>? conditions,
+    Map<String, dynamic>? customLimits,
   }) async {
     try {
       await _dio.post(
@@ -232,6 +257,7 @@ class ApiService {
           'relation': relation,
           'ageGroup': ageGroup,
           if (conditions != null) 'conditions': conditions,
+          if (customLimits != null) 'customLimits': customLimits,
         },
         options: _authHeader(),
       );

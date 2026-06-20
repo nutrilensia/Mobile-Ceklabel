@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:camera/camera.dart';
@@ -11,6 +13,446 @@ import '../models/live_scan_result.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
+
+class _QuizItem {
+  final String q;
+  final List<String> opts;
+  final int answer;
+  final String fact;
+  const _QuizItem({required this.q, required this.opts, required this.answer, required this.fact});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated quiz overlay shown during scan processing
+// ─────────────────────────────────────────────────────────────────────────────
+class _ScanQuizOverlay extends StatefulWidget {
+  final _QuizItem quiz;
+  final List<String> loadingMessages;
+  final int loadingTextIndex;
+  const _ScanQuizOverlay({
+    required this.quiz,
+    required this.loadingMessages,
+    required this.loadingTextIndex,
+  });
+
+  @override
+  State<_ScanQuizOverlay> createState() => _ScanQuizOverlayState();
+}
+
+class _ScanQuizOverlayState extends State<_ScanQuizOverlay>
+    with TickerProviderStateMixin {
+  late final AnimationController _entryCtrl;
+  late final AnimationController _staggerCtrl;
+  late final AnimationController _feedbackCtrl;
+  late final AnimationController _factCtrl;
+
+  late final Animation<double> _entryFade;
+  late final Animation<Offset> _entrySlide;
+
+  int? _selected;
+  bool _isCorrect = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _entryFade = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
+    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOutCubic));
+
+    _staggerCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _feedbackCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _factCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+
+    _entryCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 180), () {
+      if (mounted) _staggerCtrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _entryCtrl.dispose();
+    _staggerCtrl.dispose();
+    _feedbackCtrl.dispose();
+    _factCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTap(int i) {
+    if (_selected != null) return;
+    setState(() {
+      _selected = i;
+      _isCorrect = i == widget.quiz.answer;
+    });
+    _feedbackCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 280), () {
+      if (mounted) _factCtrl.forward();
+    });
+  }
+
+  Animation<double> _optionAnim(int index) {
+    final start = index * 0.14;
+    final end = (start + 0.42).clamp(0.0, 1.0);
+    return CurvedAnimation(
+      parent: _staggerCtrl,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: 0.85),
+            const Color(0xFF051212).withValues(alpha: 0.93),
+          ],
+        ),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 36),
+          child: FadeTransition(
+            opacity: _entryFade,
+            child: SlideTransition(
+              position: _entrySlide,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildStatusBar(),
+                  const SizedBox(height: 14),
+                  _buildCard(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBar() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.28)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 18, height: 18,
+                child: CircularProgressIndicator(
+                  color: Color(0xFF4ECDC4), strokeWidth: 2.0,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+                          .animate(anim),
+                      child: child,
+                    ),
+                  ),
+                  child: Text(
+                    widget.loadingMessages[widget.loadingTextIndex],
+                    key: ValueKey<int>(widget.loadingTextIndex),
+                    style: GoogleFonts.inter(
+                      fontSize: 13, fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.88),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard() {
+    return AnimatedBuilder(
+      animation: _feedbackCtrl,
+      builder: (context, child) {
+        double dx = 0;
+        double scale = 1.0;
+        if (_selected != null && !_isCorrect) {
+          dx = 7 * math.sin(_feedbackCtrl.value * math.pi * 5) * (1 - _feedbackCtrl.value);
+        }
+        if (_selected != null && _isCorrect) {
+          final t = _feedbackCtrl.value;
+          scale = 1.0 + 0.025 * math.sin(t * math.pi * 3) * (1 - t);
+        }
+        return Transform.translate(
+          offset: Offset(dx, 0),
+          child: Transform.scale(scale: scale, child: child),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.11),
+                  Colors.white.withValues(alpha: 0.04),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                width: 1.5,
+                color: const Color(0xFF4ECDC4).withValues(alpha: 0.45),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCardHeader(),
+                  const SizedBox(height: 14),
+                  Text(
+                    widget.quiz.q,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14.5, fontWeight: FontWeight.w700,
+                      color: Colors.white, height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ..._buildOptions(),
+                  _buildFact(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardHeader() {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4ECDC4), Color(0xFF9B59B6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.psychology_rounded, color: Colors.white, size: 13),
+              const SizedBox(width: 5),
+              Text('Wawasan Gizi',
+                  style: GoogleFonts.poppins(
+                      fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+            ],
+          ),
+        ),
+        const Spacer(),
+        Row(
+          children: List.generate(3, (i) => Container(
+            margin: const EdgeInsets.only(left: 4),
+            width: 5, height: 5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF4ECDC4).withValues(alpha: 0.25 + i * 0.2),
+            ),
+          )),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildOptions() {
+    const labels = ['A', 'B', 'C', 'D'];
+    return widget.quiz.opts.asMap().entries.map((e) {
+      final i = e.key;
+      final opt = e.value;
+      final answered = _selected != null;
+      final isChosen = _selected == i;
+      final isRight = i == widget.quiz.answer;
+
+      Color bgColor = Colors.white.withValues(alpha: 0.06);
+      Color borderColor = Colors.white.withValues(alpha: 0.15);
+      Color textColor = Colors.white.withValues(alpha: 0.85);
+      Color labelBg = Colors.white.withValues(alpha: 0.10);
+      Color labelText = Colors.white.withValues(alpha: 0.65);
+
+      if (answered) {
+        if (isRight) {
+          bgColor = const Color(0xFF1E8F4E).withValues(alpha: 0.2);
+          borderColor = const Color(0xFF4ADE80).withValues(alpha: 0.65);
+          textColor = const Color(0xFF4ADE80);
+          labelBg = const Color(0xFF4ADE80).withValues(alpha: 0.18);
+          labelText = const Color(0xFF4ADE80);
+        } else if (isChosen) {
+          bgColor = const Color(0xFFFF6B6B).withValues(alpha: 0.15);
+          borderColor = const Color(0xFFFF6B6B).withValues(alpha: 0.6);
+          textColor = const Color(0xFFFF6B6B);
+          labelBg = const Color(0xFFFF6B6B).withValues(alpha: 0.18);
+          labelText = const Color(0xFFFF6B6B);
+        }
+      }
+
+      return AnimatedBuilder(
+        animation: _optionAnim(i),
+        builder: (ctx, child) {
+          final v = _optionAnim(i).value;
+          return Opacity(
+            opacity: v.clamp(0.0, 1.0),
+            child: Transform.translate(offset: Offset((1 - v) * 28, 0), child: child),
+          );
+        },
+        child: GestureDetector(
+          onTap: answered ? null : () => _onTap(i),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderColor, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  width: 26, height: 26,
+                  decoration: BoxDecoration(
+                    color: labelBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: borderColor.withValues(alpha: 0.5)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      labels[i],
+                      style: GoogleFonts.poppins(
+                          fontSize: 12, fontWeight: FontWeight.w700, color: labelText),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Text(
+                    opt,
+                    style: GoogleFonts.inter(
+                      fontSize: 13, color: textColor,
+                      fontWeight: (isChosen || (answered && isRight))
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                if (answered && isRight)
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF4ADE80), size: 18),
+                if (answered && isChosen && !isRight)
+                  const Icon(Icons.cancel_rounded, color: Color(0xFFFF6B6B), size: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildFact() {
+    if (_selected == null) return const SizedBox.shrink();
+    return AnimatedBuilder(
+      animation: _factCtrl,
+      builder: (context, child) => Opacity(
+        opacity: _factCtrl.value.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, (1 - _factCtrl.value) * 18),
+          child: child,
+        ),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _isCorrect
+                ? [
+                    const Color(0xFF1E8F4E).withValues(alpha: 0.18),
+                    const Color(0xFF1E8F4E).withValues(alpha: 0.06),
+                  ]
+                : [
+                    const Color(0xFFFFAD00).withValues(alpha: 0.18),
+                    const Color(0xFFFFAD00).withValues(alpha: 0.06),
+                  ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: (_isCorrect ? const Color(0xFF4ADE80) : const Color(0xFFFFAD00))
+                .withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _isCorrect ? '🎉' : '💡',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _isCorrect ? 'Benar!' : 'Hampir!',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12, fontWeight: FontWeight.w700,
+                      color: _isCorrect ? const Color(0xFF4ADE80) : const Color(0xFFFFAD00),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    widget.quiz.fact,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.82),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class ScannerScreen extends StatefulWidget {
   /// Called by HomeScreen to notify tab visibility changes.
@@ -53,6 +495,20 @@ class _ScannerScreenState extends State<ScannerScreen>
   double _maxZoom = 1.0;
   double _baseZoom = 1.0;
 
+  // ── Mini-quiz saat loading ─────────────────────────────────────────────────
+  int _quizIndex = 0;
+
+  static final _quizPool = [
+    _QuizItem(q: 'Berapa batas gula harian menurut WHO?', opts: ['25 gram', '50 gram', '75 gram', '100 gram'], answer: 0, fact: 'WHO merekomendasikan maks. 25 g gula tambahan per hari — setara ~6 sendok teh.'),
+    _QuizItem(q: 'Nutrisi apa yang paling berperan menaikkan tekanan darah?', opts: ['Lemak jenuh', 'Natrium (garam)', 'Gula', 'Protein'], answer: 1, fact: 'Natrium berlebih menyebabkan tubuh menahan air sehingga tekanan darah naik.'),
+    _QuizItem(q: 'NutriScore A berarti produk tersebut…', opts: ['Paling tidak sehat', 'Hanya untuk anak-anak', 'Paling sehat di kelasnya', 'Bebas kalori'], answer: 2, fact: 'Grade A = produk dengan profil nutrisi terbaik. Makin mendekati E, makin perlu dibatasi.'),
+    _QuizItem(q: 'Lemak trans berbahaya karena…', opts: ['Menaikkan kolesterol jahat & menurunkan kolesterol baik', 'Membuat kenyang lebih cepat', 'Menyebabkan alergi', 'Mengandung banyak kalori'], answer: 0, fact: 'Lemak trans meningkatkan LDL (buruk) sekaligus menurunkan HDL (baik) — kombinasi terburuk untuk jantung.'),
+    _QuizItem(q: 'Label gizi menggunakan acuan per…', opts: ['Per sajian', 'Per 100 g / 100 ml', 'Per porsi makan siang', 'Per hari penuh'], answer: 1, fact: 'Regulasi BPOM mewajibkan info gizi per 100 g/ml agar mudah dibandingkan antar produk.'),
+    _QuizItem(q: '"0 kalori" pada minuman artinya benar-benar tidak ada kalori?', opts: ['Ya, tidak ada sama sekali', 'Tidak — boleh ada hingga 4 kkal per sajian', 'Berarti ada pemanis buatan', 'Hanya untuk minuman botol'], answer: 1, fact: 'Regulasi memperbolehkan klaim "0 kalori" jika ≤ 4 kkal per sajian — bukan benar-benar nol.'),
+    _QuizItem(q: 'Kandungan apa yang menunjukkan produk tinggi serat?', opts: ['Protein > 10 g', 'Serat ≥ 6 g per 100 g', 'Lemak < 3 g', 'Natrium < 120 mg'], answer: 1, fact: 'Produk disebut "tinggi serat" jika mengandung ≥ 6 g serat per 100 g sesuai standar Codex.'),
+    _QuizItem(q: 'Urutan bahan pada daftar komposisi menunjukkan…', opts: ['Abjad nama bahan', 'Jumlah terbanyak ke paling sedikit', 'Tingkat bahaya', 'Tidak ada artinya'], answer: 1, fact: 'Bahan pertama dalam komposisi = bahan paling banyak digunakan. Gula di urutan ke-2 atau ke-3 = produk tinggi gula.'),
+  ];
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   final ImagePicker _imagePicker = ImagePicker();
@@ -94,17 +550,18 @@ class _ScannerScreenState extends State<ScannerScreen>
     _isTabVisible = isVisible;
 
     if (isVisible) {
-      // Tab became visible — resume camera
+      // Tab became visible — resume camera and refresh family profiles
       _initCamera();
+      if (AuthService().isLoggedIn) _loadFamilyProfiles(forceRefresh: true);
     } else {
       // Tab became hidden — release camera resources
       _disposeCamera();
     }
   }
 
-  Future<void> _loadFamilyProfiles() async {
+  Future<void> _loadFamilyProfiles({bool forceRefresh = false}) async {
     try {
-      final profiles = await ApiService().getFamilyProfiles();
+      final profiles = await ApiService().getFamilyProfiles(forceRefresh: forceRefresh);
       if (mounted) setState(() => _familyProfiles = profiles);
     } catch (_) {}
   }
@@ -290,6 +747,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       _isProcessing = isProcessing;
       if (isProcessing) {
         _loadingTextIndex = 0;
+        _quizIndex = math.Random().nextInt(_quizPool.length);
         _loadingTimer?.cancel();
         _loadingTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
           if (mounted) {
@@ -552,7 +1010,10 @@ class _ScannerScreenState extends State<ScannerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffold(context),
-      body: Stack(
+      body: GestureDetector(
+        onScaleStart: _onScaleStart,
+        onScaleUpdate: _onScaleUpdate,
+        child: Stack(
         fit: StackFit.expand,
         children: [
           if (_isCameraInitialized && _cameraController != null)
@@ -589,25 +1050,22 @@ class _ScannerScreenState extends State<ScannerScreen>
           if (_isCapturing) _buildShutterHint(),
           if (_isProcessing) _buildLoadingOverlay(),
         ],
+        ),
       ),
     );
   }
 
-  /// Camera preview with proper aspect ratio and pinch-to-zoom.
+  /// Camera preview with proper aspect ratio.
   Widget _buildCameraPreview() {
     final controller = _cameraController!;
-    return GestureDetector(
-      onScaleStart: _onScaleStart,
-      onScaleUpdate: _onScaleUpdate,
-      child: SizedBox.expand(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          clipBehavior: Clip.hardEdge,
-          child: SizedBox(
-            width: controller.value.previewSize?.height ?? 1,
-            height: controller.value.previewSize?.width ?? 1,
-            child: CameraPreview(controller),
-          ),
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: controller.value.previewSize?.height ?? 1,
+          height: controller.value.previewSize?.width ?? 1,
+          child: CameraPreview(controller),
         ),
       ),
     );
@@ -794,7 +1252,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               ),
               const SizedBox(width: 10),
               Text(
-                'CekLabel',
+                'NutriLens',
                 style: GoogleFonts.poppins(
                   fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                 ),
@@ -1203,7 +1661,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               ),
               child: Icon(icon,
                   size: 18,
-                  color: selected ? const Color(0xFF4ECDC4) : Colors.white38),
+                  color: selected ? const Color(0xFF4ECDC4) : AppColors.iconInactive(context)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1214,7 +1672,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     name,
                     style: GoogleFonts.inter(
                       fontSize: 14, fontWeight: FontWeight.w600,
-                      color: selected ? const Color(0xFF4ECDC4) : Colors.white,
+                      color: selected ? const Color(0xFF4ECDC4) : AppColors.textPrimary(context),
                     ),
                   ),
                   Text(
@@ -1432,44 +1890,10 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Widget _buildLoadingOverlay() {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.7),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 56, height: 56,
-                child: CircularProgressIndicator(color: Color(0xFF4ECDC4), strokeWidth: 3),
-              ),
-              const SizedBox(height: 20),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  _loadingMessages[_loadingTextIndex],
-                  key: ValueKey<int>(_loadingTextIndex),
-                  style: GoogleFonts.poppins(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Mohon tunggu sebentar',
-                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context)),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return _ScanQuizOverlay(
+      quiz: _quizPool[_quizIndex],
+      loadingMessages: _loadingMessages,
+      loadingTextIndex: _loadingTextIndex,
     );
   }
 }
