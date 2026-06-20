@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/chat_message.dart';
 import '../models/family_profile.dart';
 import '../services/api_service.dart';
+import '../widgets/app_logo.dart';
 
 class ChatScreen extends StatefulWidget {
   final FamilyProfile? initialProfile;
@@ -125,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: _teal.withValues(alpha: 0.4)),
               ),
-              child: const Icon(Icons.eco_rounded, color: _teal, size: 18),
+              child: const AppLogo(size: 18),
             ),
             const SizedBox(width: 10),
             Column(
@@ -201,7 +202,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 color: _teal.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.eco_rounded, color: _teal, size: 14),
+              child: const AppLogo(size: 14),
             ),
             const SizedBox(width: 8),
           ],
@@ -248,7 +249,7 @@ class _ChatScreenState extends State<ChatScreen> {
               color: _teal.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.eco_rounded, color: _teal, size: 14),
+            child: const AppLogo(size: 14),
           ),
           const SizedBox(width: 8),
           Container(

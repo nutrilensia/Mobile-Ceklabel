@@ -13,6 +13,8 @@ import '../models/live_scan_result.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
+import '../widgets/app_logo.dart';
+
 
 class _QuizItem {
   final String q;
@@ -1248,7 +1250,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.inputBorder(context)),
                 ),
-                child: const Icon(Icons.eco_rounded, color: Color(0xFF4ECDC4), size: 22),
+                child: const AppLogo(size: 22),
               ),
               const SizedBox(width: 10),
               Text(

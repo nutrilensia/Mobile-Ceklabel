@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import '../widgets/app_logo.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -311,9 +313,7 @@ class _LoginScreenState extends State<LoginScreen>
                           color: const Color(0xFF4ECDC4).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
-                          Icons.eco_rounded, color: Color(0xFF4ECDC4), size: 26,
-                        ),
+                        child: const AppLogo(size: 26),
                       ),
                       const SizedBox(width: 12),
                       Text(
