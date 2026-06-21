@@ -105,7 +105,7 @@ class _SayaScreenState extends State<SayaScreen> {
       backgroundColor: AppColors.scaffold(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -163,7 +163,7 @@ class _SayaScreenState extends State<SayaScreen> {
               _buildLabel('Pengaturan'),
               _buildThemeSelector(),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -384,11 +384,11 @@ class _SayaScreenState extends State<SayaScreen> {
                     style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: b.earned ? Colors.white : Colors.white38)),
+                        color: b.earned ? AppColors.textPrimary(context) : AppColors.textQuaternary(context))),
                 Text(b.description,
                     style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: b.earned ? Colors.white54 : Colors.white24)),
+                        color: b.earned ? AppColors.textSecondary(context) : AppColors.textQuaternary(context))),
               ],
             ),
           ),
@@ -449,7 +449,7 @@ class _SayaScreenState extends State<SayaScreen> {
               ),
             ),
             Icon(Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.2), size: 20),
+                color: AppColors.textQuaternary(context), size: 20),
           ],
         ),
       ),

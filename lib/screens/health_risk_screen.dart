@@ -223,7 +223,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
   Widget _buildRiskCard(HealthRisk risk) {
     final color = _riskColor(risk.riskLevel);
     final trendIcon = _trendIcon(risk.trend);
-    final trendColor = risk.trend == 'increasing' ? const Color(0xFFE63312) : risk.trend == 'decreasing' ? const Color(0xFF1E8F4E) : Colors.white38;
+    final trendColor = risk.trend == 'increasing' ? const Color(0xFFE63312) : risk.trend == 'decreasing' ? const Color(0xFF1E8F4E) : AppColors.textTertiary(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -289,7 +289,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
                 const SizedBox(height: 8),
                 _infoRow(Icons.lightbulb_outline_rounded, risk.recommendation, _teal.withValues(alpha: 0.8)),
                 const SizedBox(height: 8),
-                _infoRow(Icons.article_outlined, risk.reference, Colors.white30),
+                _infoRow(Icons.article_outlined, risk.reference, AppColors.textTertiary(context)),
               ],
             ),
           ),
@@ -325,7 +325,7 @@ class _HealthRiskScreenState extends State<HealthRiskScreen> {
             left: MediaQuery.of(context).size.width * 0.5 - 48,
             child: Container(
               height: 6, width: 1.5,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: AppColors.divider(context),
             ),
           ),
           FractionallySizedBox(

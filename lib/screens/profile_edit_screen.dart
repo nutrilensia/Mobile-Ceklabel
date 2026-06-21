@@ -167,7 +167,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     checkmarkColor: const Color(0xFFFF6B6B),
                     labelStyle: GoogleFonts.inter(
                       fontSize: 12,
-                      color: selected ? const Color(0xFFFF6B6B) : Colors.white54,
+                      color: selected ? const Color(0xFFFF6B6B) : AppColors.textSecondary(context),
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -256,7 +256,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ),
           alignment: Alignment.center,
           child: Icon(icon, size: 18,
-              color: value ? const Color(0xFF4ECDC4) : Colors.white38),
+              color: value ? const Color(0xFF4ECDC4) : AppColors.iconInactive(context)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -266,7 +266,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               Text(title,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: value ? Colors.white : Colors.white70,
+                    color: value ? AppColors.textPrimary(context) : AppColors.textSecondary(context),
                     fontWeight: value ? FontWeight.w600 : FontWeight.normal,
                   )),
               Text(subtitle,

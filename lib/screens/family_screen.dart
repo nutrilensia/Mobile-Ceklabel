@@ -195,7 +195,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dialogBg(context),
         title: Text('Hapus ${p.name}?',
             style: GoogleFonts.poppins(color: AppColors.textPrimary(context))),
         content: Text(
@@ -504,7 +504,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
                   checkmarkColor: const Color(0xFFFFAD00),
                   labelStyle: GoogleFonts.inter(
                     fontSize: 12,
-                    color: selected ? const Color(0xFFFFAD00) : Colors.white54,
+                    color: selected ? const Color(0xFFFFAD00) : AppColors.textSecondary(context),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

@@ -221,7 +221,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        _chip(r.servingSize, AppColors.cardBorder(context), Colors.white60),
+                        _chip(r.servingSize, AppColors.cardBorder(context), AppColors.textSecondary(context)),
                         if (r.category.isNotEmpty)
                           _chip(_capitalize(r.category),
                               const Color(0xFFAD7BFF).withValues(alpha: 0.12),
@@ -464,7 +464,7 @@ class _ResultScreenState extends State<ResultScreen> {
           ],
 
           if (ing.raw != null && ing.raw!.isNotEmpty) ...[
-            const Divider(color: Colors.white12, height: 20),
+            Divider(color: AppColors.divider(context), height: 20),
             Text('Daftar komposisi',
                 style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context))),
             const SizedBox(height: 4),
@@ -504,7 +504,7 @@ class _ResultScreenState extends State<ResultScreen> {
       case 'trans_fat':
         return const Color(0xFFFF6B6B);
       default:
-        return Colors.white54;
+        return const Color(0xFF888888);
     }
   }
 
@@ -676,7 +676,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: Text(s == s.toInt() ? '${s.toInt()}' : '$s',
                           style: GoogleFonts.inter(
                               fontSize: 14,
-                              color: sel ? const Color(0xFF4ECDC4) : Colors.white60,
+                              color: sel ? const Color(0xFF4ECDC4) : AppColors.textSecondary(context),
                               fontWeight: sel ? FontWeight.w600 : FontWeight.normal)),
                     ),
                   );

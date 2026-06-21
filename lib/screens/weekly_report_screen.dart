@@ -126,7 +126,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           ),
           IconButton(
             icon: Icon(Icons.chevron_right_rounded,
-                color: _isThisWeek ? Colors.white12 : Colors.white54),
+                color: _isThisWeek ? AppColors.textQuaternary(context) : AppColors.textSecondary(context)),
             onPressed: _isThisWeek ? null : () => _changeWeek(1),
             splashRadius: 20,
           ),
@@ -289,7 +289,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
           Text('$pct% batas harian',
               style: GoogleFonts.inter(
                   fontSize: 10,
-                  color: over ? const Color(0xFFFF6B6B) : Colors.white30,
+                  color: over ? const Color(0xFFFF6B6B) : AppColors.textTertiary(context),
                   fontWeight: over ? FontWeight.w600 : FontWeight.normal)),
         ],
       ),
@@ -358,7 +358,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                 textAlign: TextAlign.right,
                 style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: count > 0 ? color : Colors.white24,
+                    color: count > 0 ? color : AppColors.textQuaternary(context),
                     fontWeight: FontWeight.w600)),
           ),
           const SizedBox(width: 6),

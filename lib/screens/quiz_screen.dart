@@ -523,7 +523,7 @@ class _QuizScreenState extends State<QuizScreen>
 
     Color borderColor = AppColors.cardBorder(context);
     Color bgColor = AppColors.cardBg(context);
-    Color textColor = Colors.white70;
+    Color textColor = AppColors.textBody(context);
     Color circleBg = AppColors.cardBorder(context);
 
     if (isCorrect) {
@@ -539,7 +539,7 @@ class _QuizScreenState extends State<QuizScreen>
     } else if (isSelected && !answered) {
       borderColor = const Color(0xFF4ECDC4).withValues(alpha: 0.5);
       bgColor = const Color(0xFF4ECDC4).withValues(alpha: 0.08);
-      textColor = Colors.white;
+      textColor = AppColors.textPrimary(context);
       circleBg = const Color(0xFF4ECDC4).withValues(alpha: 0.2);
     }
 

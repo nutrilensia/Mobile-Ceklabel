@@ -169,12 +169,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
           children: [
             Icon(selected ? Icons.person_rounded : Icons.person_outline_rounded,
                 size: 14,
-                color: selected ? const Color(0xFF4ECDC4) : Colors.white38),
+                color: selected ? const Color(0xFF4ECDC4) : AppColors.iconInactive(context)),
             const SizedBox(width: 6),
             Text(name,
                 style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: selected ? const Color(0xFF4ECDC4) : Colors.white60,
+                    color: selected ? const Color(0xFF4ECDC4) : AppColors.textSecondary(context),
                     fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),
@@ -223,7 +223,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           ),
           IconButton(
             icon: Icon(Icons.chevron_right_rounded,
-                color: _isToday ? Colors.white12 : Colors.white54),
+                color: _isToday ? AppColors.textQuaternary(context) : AppColors.textSecondary(context)),
             onPressed: _isToday ? null : () => _changeDay(1),
             splashRadius: 20,
           ),
@@ -235,10 +235,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
   Widget _buildDayView(DiaryDay day) {
     return RefreshIndicator(
       color: const Color(0xFF4ECDC4),
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppColors.surface(context),
       onRefresh: () async => _reload(),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 96),
         children: [
           _buildIntakeSummary(day),
           if (day.warnings.isNotEmpty) ...[
@@ -269,10 +269,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0D2B2B), Color(0xFF12121F)],
+          colors: AppColors.intakeGradient(context),
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.2)),
@@ -330,7 +330,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 Text('${consumed.round()} / ${limit.round()} $unit',
                     style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: over ? const Color(0xFFFF6B6B) : Colors.white54,
+                        color: over ? const Color(0xFFFF6B6B) : AppColors.textSecondary(context),
                         fontWeight: over ? FontWeight.w600 : FontWeight.normal)),
               ],
             ),
@@ -468,7 +468,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dialogBg(context),
         title: Text('Hapus dari diary?',
             style: GoogleFonts.poppins(color: AppColors.textPrimary(context), fontSize: 16)),
         content: Text('${item.productName} akan dihapus dari catatan hari ini.',

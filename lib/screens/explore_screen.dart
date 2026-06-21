@@ -183,6 +183,7 @@ class _ExploreScreenState extends State<ExploreScreen>
               ),
             )
           : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
@@ -447,7 +448,7 @@ class _ExploreScreenState extends State<ExploreScreen>
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
             itemCount: products.length,
             itemBuilder: (_, i) => _buildProductCard(products[i], i + 1),
           ),
