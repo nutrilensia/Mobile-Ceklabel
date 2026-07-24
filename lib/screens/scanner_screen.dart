@@ -13,6 +13,7 @@ import '../models/live_scan_result.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
+import 'photo_compare_screen.dart';
 import '../widgets/app_logo.dart';
 
 
@@ -1344,6 +1345,20 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
               ),
+              const SizedBox(width: 10),
+              // Tips button
+              GestureDetector(
+                onTap: _showTips,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.inputBorder(context)),
+                  ),
+                  child: const Icon(Icons.info_outline_rounded, color: Colors.white60, size: 20),
+                ),
+              ),
             ],
           ),
         ),
@@ -1404,14 +1419,21 @@ class _ScannerScreenState extends State<ScannerScreen>
 
               // Zoom hint / placeholder for symmetry
               _buildControlButton(
-                icon: Icons.info_outline_rounded,
-                label: 'Tips',
-                onTap: _showTips,
+                icon: Icons.add_a_photo_rounded,
+                label: 'Bandingkan',
+                onTap: _openCompare,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _openCompare() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PhotoCompareScreen()),
     );
   }
 

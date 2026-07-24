@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 import 'compare_screen.dart';
-import 'photo_compare_screen.dart';
+
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -205,44 +205,6 @@ class _ExploreScreenState extends State<ExploreScreen>
             style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context), height: 1.4),
           ),
           const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const PhotoCompareScreen())),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  const Color(0xFF4ECDC4).withValues(alpha: 0.15),
-                  const Color(0xFF4ECDC4).withValues(alpha: 0.05),
-                ]),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.add_a_photo_rounded,
-                      color: Color(0xFF4ECDC4), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Bandingkan dari Foto',
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF4ECDC4))),
-                        Text('Foto langsung 2-3 produk, tanpa harus ada di database',
-                            style: GoogleFonts.inter(fontSize: 10, color: AppColors.textTertiary(context))),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right_rounded,
-                      color: Color(0xFF4ECDC4), size: 20),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
