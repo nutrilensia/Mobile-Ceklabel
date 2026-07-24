@@ -157,11 +157,27 @@ class ApiService {
   // ── Scan ──────────────────────────────────────────────────────────────────
 
   Future<ScanResult> scanLabel(File imageFile) async {
+    // Downscale to max 1080px — balances quality vs upload speed
+    File fileToUpload = imageFile;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final outPath = p.join(tempDir.path, 'scan_compressed.jpg');
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        imageFile.path,
+        outPath,
+        minWidth: 1080,
+        minHeight: 1,
+        quality: 80,
+      );
+      if (compressed != null) fileToUpload = File(compressed.path);
+    } catch (_) {
+      // Fallback to original on compression failure
+    }
     final isLoggedIn = AuthService().isLoggedIn;
     final endpoint = isLoggedIn ? '/api/scan/save' : '/api/scan/quick';
     try {
       final formData = FormData.fromMap({
-        'photo': await MultipartFile.fromFile(imageFile.path, filename: 'photo.jpg'),
+        'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
       });
       final res = await _dio.post(
         '$baseUrl$endpoint',

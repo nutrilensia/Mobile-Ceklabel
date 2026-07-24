@@ -15,6 +15,7 @@ import '../services/auth_service.dart';
 import 'result_screen.dart';
 import 'photo_compare_screen.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/handle_bar.dart';
 
 
 class _QuizItem {
@@ -1241,39 +1242,42 @@ class _ScannerScreenState extends State<ScannerScreen>
       top: 0, left: 0, right: 0,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.inputBorder(context)),
                 ),
-                child: const AppLogo(size: 22),
+                child: const AppLogo(size: 18),
               ),
-              const SizedBox(width: 10),
-              Text(
-                'NutriLens',
-                style: GoogleFonts.poppins(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  'NutriLens',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 6),
               // Live AR mode toggle
               GestureDetector(
                 onTap: _toggleLiveMode,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: _liveIdle
                         ? const Color(0xFFFFAD00).withValues(alpha: 0.85)
                         : _liveMode
                             ? const Color(0xFF4ECDC4).withValues(alpha: 0.9)
                             : Colors.black.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _liveIdle
                           ? const Color(0xFFFFAD00)
@@ -1292,13 +1296,13 @@ class _ScannerScreenState extends State<ScannerScreen>
                                 ? Icons.sensors_rounded
                                 : Icons.sensors_off_rounded,
                         color: _liveMode ? Colors.black : Colors.white60,
-                        size: 16,
+                        size: 14,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 4),
                       Text(
                         _liveIdle ? 'IDLE' : 'LIVE',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: _liveMode ? Colors.black : Colors.white60,
                         ),
@@ -1307,56 +1311,47 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              // Camera switch button
-              GestureDetector(
-                onTap: _switchCamera,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.inputBorder(context)),
-                  ),
-                  child: Icon(Icons.flip_camera_android_rounded, color: AppColors.textPrimary(context), size: 20),
+              const SizedBox(width: 6),
+              // Icon buttons group (switch cam, flash, tips)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.inputBorder(context)),
                 ),
-              ),
-              const SizedBox(width: 10),
-              // Flash button
-              GestureDetector(
-                onTap: _toggleFlash,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _isFlashOn
-                        ? const Color(0xFFFFD93D).withValues(alpha: 0.25)
-                        : Colors.black.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _isFlashOn
-                          ? const Color(0xFFFFD93D).withValues(alpha: 0.5)
-                          : AppColors.inputBorder(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Camera switch
+                    GestureDetector(
+                      onTap: _switchCamera,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(Icons.flip_camera_android_rounded, color: AppColors.textPrimary(context), size: 18),
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    _isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
-                    color: _isFlashOn ? const Color(0xFFFFD93D) : Colors.white60,
-                    size: 20,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Tips button
-              GestureDetector(
-                onTap: _showTips,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.inputBorder(context)),
-                  ),
-                  child: const Icon(Icons.info_outline_rounded, color: Colors.white60, size: 20),
+                    Container(width: 1, height: 18, color: AppColors.inputBorder(context)),
+                    // Flash
+                    GestureDetector(
+                      onTap: _toggleFlash,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          _isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                          color: _isFlashOn ? const Color(0xFFFFD93D) : Colors.white60, size: 18,
+                        ),
+                      ),
+                    ),
+                    Container(width: 1, height: 18, color: AppColors.inputBorder(context)),
+                    // Tips
+                    GestureDetector(
+                      onTap: _showTips,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: const Icon(Icons.info_outline_rounded, color: Colors.white60, size: 18),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1451,14 +1446,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const HandleBar(),
             const SizedBox(height: 20),
             Text(
               'Tips Scan yang Baik',
@@ -1588,15 +1576,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textQuaternary(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const HandleBar(),
             const SizedBox(height: 20),
             Text(
               'Scan untuk siapa?',

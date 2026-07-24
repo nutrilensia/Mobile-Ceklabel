@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/family_profile.dart';
 import '../models/health_profile.dart';
 import '../services/api_service.dart';
+import '../widgets/handle_bar.dart';
 
 class FamilyScreen extends StatefulWidget {
   const FamilyScreen({super.key});
@@ -397,15 +398,7 @@ class _FamilyFormSheetState extends State<_FamilyFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textQuaternary(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const HandleBar(),
             const SizedBox(height: 20),
             Text(
               widget.existing == null ? 'Tambah Anggota' : 'Edit Anggota',

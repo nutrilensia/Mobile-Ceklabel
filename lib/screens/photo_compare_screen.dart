@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'compare_screen.dart';
+import '../widgets/handle_bar.dart';
 
 /// "Belanja Pintar" dari foto: ambil 2-3 foto label produk langsung,
 /// lalu bandingkan tanpa perlu produk ada di database.
@@ -33,11 +34,7 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                  color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2)),
-            ),
+            const HandleBar(),
             const SizedBox(height: 20),
             _sourceTile(ctx, Icons.photo_camera_rounded, 'Ambil Foto', ImageSource.camera),
             const SizedBox(height: 10),
