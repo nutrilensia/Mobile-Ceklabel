@@ -58,7 +58,7 @@ class ApiService {
       );
       final data = res.data['data'];
       clearCaches();
-      AuthService().setFromLogin(
+      await AuthService().setFromLogin(
         data['token'] as String,
         UserModel.fromJson(data['user'] as Map<String, dynamic>),
       );
@@ -75,7 +75,7 @@ class ApiService {
       );
       final data = res.data['data'];
       clearCaches();
-      AuthService().setFromLogin(
+      await AuthService().setFromLogin(
         data['token'] as String,
         UserModel.fromJson(data['user'] as Map<String, dynamic>),
       );

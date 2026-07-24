@@ -5,6 +5,7 @@ import '../models/scan_result.dart';
 import '../models/family_profile.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../theme/grade_colors.dart';
 import '../widgets/nutri_score_badge.dart';
 import '../widgets/nutrition_card.dart';
 import '../widgets/score_breakdown.dart';
@@ -1125,7 +1126,7 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _buildAltRow(AlternativeProduct alt) {
-    final gradeColor = _gradeColor(alt.nutriScore);
+    final col = gradeColor(alt.nutriScore);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1140,16 +1141,16 @@ class _ResultScreenState extends State<ResultScreen> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: gradeColor.withValues(alpha: 0.15),
+              color: col.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+              border: Border.all(color: col.withValues(alpha: 0.3)),
             ),
             alignment: Alignment.center,
             child: Text(alt.nutriScore,
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: gradeColor)),
+                    color: col)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1177,14 +1178,4 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A': return const Color(0xFF1E8F4E);
-      case 'B': return const Color(0xFF6DB33F);
-      case 'C': return const Color(0xFFFFAD00);
-      case 'D': return const Color(0xFFEF7D00);
-      case 'E': return const Color(0xFFE63312);
-      default:  return const Color(0xFF888888);
-    }
-  }
 }

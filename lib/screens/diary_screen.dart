@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/grade_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/diary_day.dart';
 import '../models/family_profile.dart';
@@ -389,15 +390,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Widget _buildEntryCard(DiaryEntryItem item) {
-    Color gradeColor;
-    switch (item.nutriScore.toUpperCase()) {
-      case 'A': gradeColor = const Color(0xFF1E8F4E); break;
-      case 'B': gradeColor = const Color(0xFF6DB33F); break;
-      case 'C': gradeColor = const Color(0xFFFFAD00); break;
-      case 'D': gradeColor = const Color(0xFFEF7D00); break;
-      case 'E': gradeColor = const Color(0xFFE63312); break;
-      default: gradeColor = Colors.grey;
-    }
+    final col = gradeColor(item.nutriScore);
     final time =
         '${item.consumedAt.hour.toString().padLeft(2, '0')}:${item.consumedAt.minute.toString().padLeft(2, '0')}';
 
@@ -429,14 +422,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: gradeColor.withValues(alpha: 0.15),
+                color: col.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+                border: Border.all(color: col.withValues(alpha: 0.3)),
               ),
               alignment: Alignment.center,
               child: Text(item.nutriScore.isNotEmpty ? item.nutriScore : '?',
                   style: GoogleFonts.poppins(
-                      fontSize: 17, fontWeight: FontWeight.bold, color: gradeColor)),
+                      fontSize: 17, fontWeight: FontWeight.bold, color: col)),
             ),
             const SizedBox(width: 12),
             Expanded(

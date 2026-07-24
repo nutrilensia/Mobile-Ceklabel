@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/grade_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -324,7 +325,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   }
 
   Widget _gradeBar(String grade, int count, double pct) {
-    final color = _gradeColor(grade);
+    final color = gradeColor(grade);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -929,14 +930,4 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     );
   }
 
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A': return const Color(0xFF1E8F4E);
-      case 'B': return const Color(0xFF6DB33F);
-      case 'C': return const Color(0xFFFFAD00);
-      case 'D': return const Color(0xFFEF7D00);
-      case 'E': return const Color(0xFFE63312);
-      default: return const Color(0xFF888888);
-    }
-  }
 }

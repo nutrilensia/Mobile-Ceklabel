@@ -910,14 +910,15 @@ class _ScannerScreenState extends State<ScannerScreen>
         }
         setState(() => _liveStatus = 'Arahkan kamera ke label nutrisi...');
       }
-    } catch (_) {
-      // Network/rate-limit/timeout — silently keep scanning
+    } catch (e) {
+      debugPrint('_liveTick error: $e');
     } finally {
       _liveBusy = false;
     }
   }
 
   void _addDetection(LiveScanResult result) {
+    if (!mounted) return;
     final key = result.productName.toLowerCase().trim();
     // Dedup: if same product already detected recently, move it to front
     _detections.removeWhere((d) => d.productName.toLowerCase().trim() == key);
