@@ -136,3 +136,36 @@ rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
 
 Overall average: **60-90% token reduction** on common development operations.
 <!-- /rtk-instructions -->
+
+## Project: Nutrilensia CekLabel
+
+### Quick Start
+```bash
+rtk flutter pub get
+rtk flutter analyze       # target: 0 error, 0 warning
+rtk flutter test          # 1 test
+rtk flutter build apk --release
+```
+
+### Architecture
+```
+lib/
+├── screens/           # 15+ screens (scanner, result, history, etc.)
+├── widgets/           HandleBar, comparison widgets
+├── services/          API (Dio), Auth, History
+├── theme/             gradeColors, AppColors
+├── models/            Data models
+└── providers/         Theme mode
+```
+
+### Key References
+- **gradeColors** → `lib/theme/grade_colors.dart` — central `kGradeColors` map, all screens call `gradeColor()`
+- **HandleBar** → `lib/widgets/handle_bar.dart` — reusable bottom sheet handle bar
+- **API** → `lib/services/api_service.dart` — Dio client to `https://ceklabel-api.vercel.app`
+- **Auth** → `lib/services/auth_service.dart` — SharedPreferences token (no encryption)
+
+### Gotchas
+- Image compression requires `FlutterImageCompress` — both scanLabel and scanLive compress before upload
+- Always check `if (mounted)` before `setState` in async contexts
+- Grade colors were duplicated inline across 6 files — always use `gradeColor()` from theme
+- History entries stored in SharedPreferences as JSON strings per user UID
