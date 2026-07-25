@@ -1,4 +1,4 @@
-name: Flutter CI
+name: Flutter Release Build
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze Project
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze --no-fatal-infos
 
       - name: Build APK
         run: flutter build apk --release
