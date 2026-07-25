@@ -4,6 +4,7 @@ import '../models/history_item.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/grade_colors.dart';
 import 'result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -59,6 +60,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  Future<bool> _confirmDelete(BuildContext ctx) async {
+    final ok = await showDialog<bool>(
+      context: ctx,
+      builder: (c) => AlertDialog(
+        backgroundColor: AppColors.dialogBg(ctx),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Hapus?',
+            style: GoogleFonts.poppins(color: AppColors.textPrimary(ctx), fontWeight: FontWeight.w600)),
+        content: Text('Riwayat scan ini akan dihapus permanen.',
+            style: GoogleFonts.inter(color: AppColors.textSecondary(ctx))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text('Batal', style: GoogleFonts.inter(color: AppColors.textSecondary(ctx))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text('Hapus',
+                style: GoogleFonts.inter(color: const Color(0xFFFF6B6B), fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   Future<void> _deleteItem(HistoryItem item) async {
     try {
       await ApiService().deleteHistoryScan(item.id);
@@ -96,17 +123,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
     );
     if (confirmed == true) await AuthService().logout();
-  }
-
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A': return const Color(0xFF2ECC40);
-      case 'B': return const Color(0xFF85C93A);
-      case 'C': return const Color(0xFFFDCB6E);
-      case 'D': return const Color(0xFFFF9F43);
-      case 'E': return const Color(0xFFFF6B6B);
-      default: return Colors.grey;
-    }
   }
 
   static const _months = [
@@ -255,7 +271,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildCard(HistoryItem item) {
-    final gradeColor = _gradeColor(item.grade);
+    final col = gradeColor(item.grade);
     return Dismissible(
       key: ValueKey(item.id),
       direction: DismissDirection.endToStart,
@@ -269,7 +285,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         child: const Icon(Icons.delete_rounded, color: Color(0xFFFF6B6B), size: 24),
       ),
-      confirmDismiss: (_) async => true,
+      confirmDismiss: (_) => _confirmDelete(context),
       onDismissed: (_) => _deleteItem(item),
       child: GestureDetector(
         onTap: () => _openDetail(item),
@@ -286,15 +302,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Container(
                 width: 52, height: 52,
                 decoration: BoxDecoration(
-                  color: gradeColor.withValues(alpha: 0.15),
+                  color: col.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: col.withValues(alpha: 0.3)),
                 ),
                 child: Center(
                   child: Text(
                     item.grade.isEmpty ? '?' : item.grade.toUpperCase(),
                     style: GoogleFonts.poppins(
-                      fontSize: 22, fontWeight: FontWeight.bold, color: gradeColor,
+                      fontSize: 22, fontWeight: FontWeight.bold, color: col,
                     ),
                   ),
                 ),

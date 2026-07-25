@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/grade_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -150,7 +151,7 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Widget _buildProductCard(CompareProduct p, {required int index}) {
-    final gradeColor = _gradeColor(p.nutriScore);
+    final col = gradeColor(p.nutriScore);
     final label = ['A', 'B', 'C'][index < 3 ? index : 0];
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -189,15 +190,15 @@ class _CompareScreenState extends State<CompareScreen> {
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: gradeColor.withValues(alpha: 0.15),
+              color: col.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+              border: Border.all(color: col.withValues(alpha: 0.3)),
             ),
             alignment: Alignment.center,
             child: Text(
               p.nutriScore.isNotEmpty ? p.nutriScore : '?',
               style: GoogleFonts.poppins(
-                fontSize: 20, fontWeight: FontWeight.bold, color: gradeColor,
+                fontSize: 20, fontWeight: FontWeight.bold, color: col,
               ),
             ),
           ),
@@ -380,14 +381,4 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Color _gradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A': return const Color(0xFF1E8F4E);
-      case 'B': return const Color(0xFF6DB33F);
-      case 'C': return const Color(0xFFFFAD00);
-      case 'D': return const Color(0xFFEF7D00);
-      case 'E': return const Color(0xFFE63312);
-      default: return const Color(0xFF888888);
-    }
-  }
 }

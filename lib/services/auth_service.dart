@@ -43,8 +43,8 @@ class AuthService {
     _controller.add(user);
   }
 
-  void setFromLogin(String token, UserModel user) {
-    _persist(token, user);
+  Future<void> setFromLogin(String token, UserModel user) async {
+    await _persist(token, user);
   }
 
   Future<void> updateUser(UserModel user) async {

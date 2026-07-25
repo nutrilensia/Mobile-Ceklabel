@@ -27,13 +27,13 @@ class HistoryService {
     await prefs.setStringList(_key(uid), jsonList);
   }
 
-  Future<void> deleteByDate(String scanDateIso, String uid) async {
+  Future<void> deleteById(String id, String uid) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = prefs.getStringList(_key(uid)) ?? [];
     jsonList.removeWhere((s) {
       try {
         final map = jsonDecode(s) as Map<String, dynamic>;
-        return map['scanDate'] == scanDateIso;
+        return map['id'] == id;
       } catch (_) {
         return false;
       }
