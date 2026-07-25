@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'history_screen.dart';
+import '../widgets/handle_bar.dart';
 import 'profile_edit_screen.dart';
 import 'family_screen.dart';
 import 'quiz_screen.dart';
@@ -318,13 +319,7 @@ class _SayaScreenState extends State<SayaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                      color: AppColors.textQuaternary(context), borderRadius: BorderRadius.circular(2)),
-                ),
-              ),
+              const HandleBar(),
               const SizedBox(height: 16),
               Text('Pencapaian',
                   style: GoogleFonts.poppins(

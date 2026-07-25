@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/handle_bar.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -52,15 +53,7 @@ class _LoginScreenState extends State<LoginScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40, height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.textQuaternary(context),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
+                  const HandleBar(),
                   const SizedBox(height: 20),
                   Text(
                     step == 0 ? 'Lupa Kata Sandi' : 'Buat Password Baru',
