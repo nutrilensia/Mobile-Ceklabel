@@ -37,7 +37,7 @@ class CekLabelApp extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
-      title: 'NutriLens',
+      title: 'NutriLensia',
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.mode,
       theme: ThemeData(
