@@ -1243,23 +1243,26 @@ class _ScannerScreenState extends State<ScannerScreen>
       top: 0, left: 0, right: 0,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.inputBorder(context)),
                 ),
-                child: const AppLogo(size: 22),
+                child: const AppLogo(size: 20),
               ),
-              const SizedBox(width: 12),
-              Text(
-                'NutriLensia',
-                style: GoogleFonts.poppins(
-                  fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'NutriLensia',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const Spacer(),
@@ -1268,7 +1271,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 onTap: _toggleLiveMode,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
                   decoration: BoxDecoration(
                     color: _liveIdle
                         ? const Color(0xFFFFAD00).withValues(alpha: 0.85)
@@ -1309,26 +1312,26 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               // Camera switch button
               GestureDetector(
                 onTap: _switchCamera,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.inputBorder(context)),
                   ),
-                  child: Icon(Icons.flip_camera_android_rounded, color: AppColors.textPrimary(context), size: 20),
+                  child: Icon(Icons.flip_camera_android_rounded, color: AppColors.textPrimary(context), size: 18),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               // Flash button
               GestureDetector(
                 onTap: _toggleFlash,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: _isFlashOn
                         ? const Color(0xFFFFD93D).withValues(alpha: 0.25)
@@ -1343,22 +1346,22 @@ class _ScannerScreenState extends State<ScannerScreen>
                   child: Icon(
                     _isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
                     color: _isFlashOn ? const Color(0xFFFFD93D) : Colors.white60,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               // Tips button
               GestureDetector(
                 onTap: _showTips,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.inputBorder(context)),
                   ),
-                  child: const Icon(Icons.info_outline_rounded, color: Colors.white60, size: 20),
+                  child: const Icon(Icons.info_outline_rounded, color: Colors.white60, size: 18),
                 ),
               ),
             ],

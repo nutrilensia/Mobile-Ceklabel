@@ -225,7 +225,7 @@ class _SplashScreenState extends State<SplashScreen>
               children: const [
                 TextSpan(text: 'nutri'),
                 TextSpan(
-                  text: 'Lens',
+                  text: 'Lensia',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
