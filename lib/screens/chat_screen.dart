@@ -27,7 +27,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Surface/bg colors now from AppColors
   
 
-  static const _greeting = 'Halo! Saya Asisten Gizi NutriLens. Saya bisa bantu kamu memahami label makanan, menganalisis pola makan, atau menjawab pertanyaan seputar nutrisi. Ada yang ingin kamu tanyakan?';
+  static const _greeting = 'Halo! Saya Asisten Gizi NutriLensia. Saya bisa bantu kamu memahami label makanan, menganalisis pola makan, atau menjawab pertanyaan seputar nutrisi. Ada yang ingin kamu tanyakan?';
 
   @override
   void initState() {

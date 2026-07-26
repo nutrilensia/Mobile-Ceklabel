@@ -310,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'NutriLens',
+                        'NutriLensia',
                         style: GoogleFonts.poppins(
                           fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context),
                         ),
