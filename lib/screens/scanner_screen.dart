@@ -1256,7 +1256,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 child: const AppLogo(size: 20),
               ),
               const SizedBox(width: 8),
-              Flexible(
+              Expanded(
                 child: Text(
                   'NutriLensia',
                   overflow: TextOverflow.ellipsis,
@@ -1265,7 +1265,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
               ),
-              const Spacer(),
               // Live AR mode toggle
               GestureDetector(
                 onTap: _toggleLiveMode,
