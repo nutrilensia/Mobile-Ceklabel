@@ -14,6 +14,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
 import 'photo_compare_screen.dart';
+import 'scan_food_screen.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/handle_bar.dart';
 
@@ -1305,6 +1306,33 @@ class _ScannerScreenState extends State<ScannerScreen>
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: _liveMode ? Colors.black : Colors.white60,
+                        ),
+                      ),
+                      ],
+                    ),
+                  ),
+                ), 
+              const SizedBox(width: 6),
+              // Scan Makanan button
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanFoodScreen()));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.inputBorder(context)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.fastfood_rounded, color: Colors.white60, size: 16),
+                      const SizedBox(width: 5),
+                      Text('MAKANAN',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white60,
                         ),
                       ),
                     ],

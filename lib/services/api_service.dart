@@ -196,6 +196,42 @@ class ApiService {
     }
   }
 
+  Future<ScanResult> scanFoodPhoto(File imageFile) async {
+    File fileToUpload = imageFile;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final outPath = p.join(tempDir.path, 'food_compressed.jpg');
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        imageFile.path,
+        outPath,
+        minWidth: 1080,
+        minHeight: 1,
+        quality: 80,
+      );
+      if (compressed != null) fileToUpload = File(compressed.path);
+    } catch (_) {}
+
+    try {
+      final formData = FormData.fromMap({
+        'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
+      });
+      final res = await _dio.post(
+        '$baseUrl/api/scan-food-photo',
+        data: formData,
+        options: AuthService().isLoggedIn ? _authHeader() : null,
+      );
+      if (res.data['success'] == true && res.data['data'] != null) {
+        return ScanResult.fromJson(res.data['data']);
+      }
+      throw ApiException(res.data['message'] ?? 'Scan makanan gagal.');
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Terjadi kesalahan: $e');
+    }
+  }
+
   // ── History ───────────────────────────────────────────────────────────────
 
   Future<List<HistoryItem>> getHistory({int page = 1, int limit = 50}) async {
