@@ -156,7 +156,7 @@ class ApiService {
 
   // ── Scan ──────────────────────────────────────────────────────────────────
 
-  Future<ScanResult> scanLabel(File imageFile) async {
+  Future<ScanResult> scanLabel(File imageFile, {String source = 'label'}) async {
     // Downscale to max 1080px — balances quality vs upload speed
     File fileToUpload = imageFile;
     try {
@@ -180,7 +180,7 @@ class ApiService {
         'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
       });
       final res = await _dio.post(
-        '$baseUrl$endpoint',
+        '$baseUrl$endpoint?source=$source',
         data: formData,
         options: isLoggedIn ? _authHeader() : null,
       );
@@ -196,41 +196,11 @@ class ApiService {
     }
   }
 
-  Future<ScanResult> scanFoodPhoto(File imageFile) async {
-    File fileToUpload = imageFile;
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final outPath = p.join(tempDir.path, 'food_compressed.jpg');
-      final compressed = await FlutterImageCompress.compressAndGetFile(
-        imageFile.path,
-        outPath,
-        minWidth: 1080,
-        minHeight: 1,
-        quality: 80,
-      );
-      if (compressed != null) fileToUpload = File(compressed.path);
-    } catch (_) {}
-
-    try {
-      final formData = FormData.fromMap({
-        'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
-      });
-      final res = await _dio.post(
-        '$baseUrl/api/scan-food-photo',
-        data: formData,
-        options: AuthService().isLoggedIn ? _authHeader() : null,
-      );
-      if (res.data['success'] == true && res.data['data'] != null) {
-        return ScanResult.fromJson(res.data['data']);
-      }
-      throw ApiException(res.data['message'] ?? 'Scan makanan gagal.');
-    } on DioException catch (e) {
-      throw ApiException(_parseError(e));
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException('Terjadi kesalahan: $e');
-    }
-  }
+  /// Estimasi makanan langsung / kemasan depan tanpa tabel.
+  /// Satu pintu dengan [scanLabel]: `source=food`. `auto` disiapkan untuk
+  /// backend auto-routing (saat ini fallback ke `label` di server).
+  Future<ScanResult> scanFoodPhoto(File imageFile, {String source = 'food'}) =>
+      scanLabel(imageFile, source: source);
 
   // ── History ───────────────────────────────────────────────────────────────
 

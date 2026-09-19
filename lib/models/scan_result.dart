@@ -53,6 +53,27 @@ class ScanResult {
     this.sumberEstimasi,
   });
 
+  /// Petakan kontrak backend ke tipe tampilan mobile.
+  /// Backend kirim `source: label|food|label-front` + `isEstimate`.
+  /// Mobile tampilkan `label_gizi|makanan_langsung|kemasan_depan`.
+  /// Terima juga `detectionType` eksplisit agar backward-compatible.
+  static String? _mapDetectionType(Map<String, dynamic> json) {
+    final explicit = json['detectionType']?.toString();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+    final source = json['source']?.toString();
+    if (source == 'food') return 'makanan_langsung';
+    if (source == 'label') return 'label_gizi';
+    if (source == 'label-front') return 'kemasan_depan';
+    if (json['isEstimate'] == true) return 'makanan_langsung';
+    return null;
+  }
+
+  static String? _mapSumberEstimasi(Map<String, dynamic> json) {
+    final explicit = json['sumber_estimasi']?.toString();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+    return json['estimateWarning']?.toString();
+  }
+
   factory ScanResult.fromJson(Map<String, dynamic> json) {
     return ScanResult(
       id: json['id']?.toString() ?? json['scanId']?.toString(),
@@ -87,8 +108,8 @@ class ScanResult {
       alternatives: (json['alternatives'] as List? ?? [])
           .map((e) => AlternativeProduct.fromJson(e as Map<String, dynamic>))
           .toList(),
-      detectionType: json['detectionType']?.toString(),
-      sumberEstimasi: json['sumber_estimasi']?.toString(),
+      detectionType: _mapDetectionType(json),
+      sumberEstimasi: _mapSumberEstimasi(json),
     );
   }
 
@@ -157,8 +178,8 @@ class ScanResult {
               warnings: const [],
             )
           : null,
-      detectionType: json['detectionType']?.toString(),
-      sumberEstimasi: json['sumber_estimasi']?.toString(),
+      detectionType: _mapDetectionType(json),
+      sumberEstimasi: _mapSumberEstimasi(json),
     );
   }
 

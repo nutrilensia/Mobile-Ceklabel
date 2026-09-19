@@ -196,7 +196,7 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (r.detectionType != null)
+          if (r.detectionType != null && r.detectionType!.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.only(bottom: 8),
@@ -211,7 +211,9 @@ class _ResultScreenState extends State<ResultScreen> {
                   Icon(
                     r.detectionType == 'makanan_langsung'
                         ? Icons.fastfood_rounded
-                        : Icons.label_rounded,
+                        : r.detectionType == 'kemasan_depan'
+                            ? Icons.photo_rounded
+                            : Icons.label_rounded,
                     size: 13,
                     color: const Color(0xFF4ECDC4),
                   ),
@@ -219,7 +221,9 @@ class _ResultScreenState extends State<ResultScreen> {
                   Text(
                     r.detectionType == 'makanan_langsung'
                         ? 'Terdeteksi: Foto Makanan'
-                        : 'Terdeteksi: Label Kemasan',
+                        : r.detectionType == 'kemasan_depan'
+                            ? 'Terdeteksi: Kemasan Depan (Estimasi)'
+                            : 'Terdeteksi: Label Kemasan',
                     style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
