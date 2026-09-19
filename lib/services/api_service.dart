@@ -156,7 +156,7 @@ class ApiService {
 
   // ── Scan ──────────────────────────────────────────────────────────────────
 
-  Future<ScanResult> scanLabel(File imageFile) async {
+  Future<ScanResult> scanLabel(File imageFile, {String source = 'label'}) async {
     // Downscale to max 1080px — balances quality vs upload speed
     File fileToUpload = imageFile;
     try {
@@ -180,7 +180,7 @@ class ApiService {
         'photo': await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
       });
       final res = await _dio.post(
-        '$baseUrl$endpoint',
+        '$baseUrl$endpoint?source=$source',
         data: formData,
         options: isLoggedIn ? _authHeader() : null,
       );
@@ -195,6 +195,12 @@ class ApiService {
       throw ApiException('Terjadi kesalahan: $e');
     }
   }
+
+  /// Estimasi makanan langsung / kemasan depan tanpa tabel.
+  /// Satu pintu dengan [scanLabel]: `source=food`. `auto` disiapkan untuk
+  /// backend auto-routing (saat ini fallback ke `label` di server).
+  Future<ScanResult> scanFoodPhoto(File imageFile, {String source = 'food'}) =>
+      scanLabel(imageFile, source: source);
 
   // ── History ───────────────────────────────────────────────────────────────
 

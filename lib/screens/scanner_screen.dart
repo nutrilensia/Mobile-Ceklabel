@@ -14,9 +14,9 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
 import 'photo_compare_screen.dart';
+
 import '../widgets/app_logo.dart';
 import '../widgets/handle_bar.dart';
-
 
 class _QuizItem {
   final String q;
@@ -524,10 +524,10 @@ class _ScannerScreenState extends State<ScannerScreen>
   int _loadingTextIndex = 0;
   final List<String> _loadingMessages = [
     'Mengunggah gambar...',
-    'Membaca label komposisi...',
-    'Mengekstrak nutrisi...',
+    'Menganalisis foto...',
+    'Mengekstrak data gizi...',
     'Menghitung Nutri-Score...',
-    'Menganalisis hasil akhir...'
+    'Menyiapkan hasil...'
   ];
 
   @override
@@ -1144,10 +1144,12 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Widget _buildScanGuide() {
+    final w = MediaQuery.of(context).size.width * 0.78;
+    final h = w * 0.65;
     return Center(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.78,
-        height: MediaQuery.of(context).size.width * 0.78 * 0.65,
+        width: w,
+        height: h,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -1161,11 +1163,14 @@ class _ScannerScreenState extends State<ScannerScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.crop_free_rounded, size: 40,
-                      color: const Color(0xFF4ECDC4).withValues(alpha: 0.5)),
+                  Icon(
+                    Icons.crop_free_rounded,
+                    size: 40,
+                    color: const Color(0xFF4ECDC4).withValues(alpha: 0.5),
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    'Arahkan ke label nutrisi',
+                    'Arahkan ke label gizi atau makanan Anda',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: Colors.white.withValues(alpha: 0.7),
@@ -1369,6 +1374,8 @@ class _ScannerScreenState extends State<ScannerScreen>
       ),
     );
   }
+
+
 
   Widget _buildBottomControls() {
     return Positioned(
