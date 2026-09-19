@@ -25,6 +25,8 @@ class ScanResult {
   final List<MisleadingClaim> misleadingClaims;
   final DailyBudget? dailyBudget;
   final List<AlternativeProduct> alternatives;
+  final String? detectionType; // "label_gizi" | "makanan_langsung" | null
+  final String? sumberEstimasi; // keterangan sumber referensi AI, null jika tidak ada
 
   ScanResult({
     this.id,
@@ -47,6 +49,8 @@ class ScanResult {
     this.misleadingClaims = const [],
     this.dailyBudget,
     this.alternatives = const [],
+    this.detectionType,
+    this.sumberEstimasi,
   });
 
   factory ScanResult.fromJson(Map<String, dynamic> json) {
@@ -83,6 +87,8 @@ class ScanResult {
       alternatives: (json['alternatives'] as List? ?? [])
           .map((e) => AlternativeProduct.fromJson(e as Map<String, dynamic>))
           .toList(),
+      detectionType: json['detectionType']?.toString(),
+      sumberEstimasi: json['sumber_estimasi']?.toString(),
     );
   }
 
@@ -151,6 +157,8 @@ class ScanResult {
               warnings: const [],
             )
           : null,
+      detectionType: json['detectionType']?.toString(),
+      sumberEstimasi: json['sumber_estimasi']?.toString(),
     );
   }
 
@@ -166,6 +174,8 @@ class ScanResult {
     'confidence': confidence,
     'notes': notes,
     'savedToHistory': savedToHistory,
+    'detectionType': detectionType,
+    'sumber_estimasi': sumberEstimasi,
   };
 }
 

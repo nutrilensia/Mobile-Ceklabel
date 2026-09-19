@@ -196,6 +196,38 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (r.detectionType != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    r.detectionType == 'makanan_langsung'
+                        ? Icons.fastfood_rounded
+                        : Icons.label_rounded,
+                    size: 13,
+                    color: const Color(0xFF4ECDC4),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    r.detectionType == 'makanan_langsung'
+                        ? 'Terdeteksi: Foto Makanan'
+                        : 'Terdeteksi: Label Kemasan',
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4ECDC4)),
+                  ),
+                ],
+              ),
+            ),
           Row(
             children: [
               Container(
@@ -540,6 +572,19 @@ class _ResultScreenState extends State<ResultScreen> {
           const SizedBox(height: 14),
           Text(widget.result.explanation,
               style: GoogleFonts.inter(fontSize: 14, color: AppColors.textBody(context), height: 1.6)),
+          if (widget.result.sumberEstimasi != null && widget.result.sumberEstimasi!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                widget.result.sumberEstimasi!,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textTertiary(context),
+                  height: 1.4,
+                ),
+              ),
+            ),
         ],
       ),
     );
