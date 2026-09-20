@@ -156,7 +156,7 @@ class ApiService {
 
   // ── Scan ──────────────────────────────────────────────────────────────────
 
-  Future<ScanResult> scanLabel(File imageFile, {String source = 'label'}) async {
+  Future<ScanResult> scanLabel(File imageFile, {String source = 'auto'}) async {
     // Downscale to max 1080px — balances quality vs upload speed
     File fileToUpload = imageFile;
     try {
