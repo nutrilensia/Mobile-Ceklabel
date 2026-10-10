@@ -11,23 +11,6 @@ Aplikasi Flutter buat baca label gizi kemasan dan taksir gizi makanan dari foto.
 - Diary harian, laporan mingguan (bisa export PDF), profil keluarga + alergi.
 - Prediksi risiko kesehatan dari pola 30 hari, kuis nutrisi, bandingkan produk.
 
-## Jalanin lokal
-
-Butuh Flutter SDK (lihat versi di `pubspec.yaml`).
-
-```bash
-flutter pub get
-flutter analyze
-flutter test
-flutter run
-```
-
-Build rilis:
-
-```bash
-flutter build apk --release
-```
-
 ## Struktur folder
 
 ```text
@@ -39,13 +22,3 @@ lib/
 ├── theme/       Warna, grade Nutri-Score
 └── providers/   State global (misal mode tema)
 ```
-
-Aturan main:
-
-- Warna grade selalu lewat `gradeColor()` di `lib/theme/grade_colors.dart`, jangan hardcode di layar.
-- Cek `mounted` sebelum `setState` di kode async.
-- Tambah endpoint? Ikuti pola di `lib/services/api_service.dart` (Dio + `ApiException`).
-
-## Kontribusi
-
-Bikin branch dari `main`, buka PR ke `main`. CI jalanin `analyze` + `test`, pastikan hijau sebelum merge.
