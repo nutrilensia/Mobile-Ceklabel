@@ -1,5 +1,8 @@
 # NutriLensia (Mobile)
 
+[![Flutter Test](https://github.com/nutrilensia/Mobile-Ceklabel/actions/workflows/flutter-test.yml/badge.svg)](https://github.com/nutrilensia/Mobile-Ceklabel/actions/workflows/flutter-test.yml)
+[![Flutter Release Build](https://github.com/nutrilensia/Mobile-Ceklabel/actions/workflows/main.yml/badge.svg)](https://github.com/nutrilensia/Mobile-Ceklabel/actions/workflows/main.yml)
+
 Aplikasi Flutter buat baca label gizi kemasan dan taksir gizi makanan dari foto. Cekrek, langsung tahu Nutri-Score, gula, natrium, dan kawan-kawannya.
 
 ## Fitur
@@ -10,6 +13,23 @@ Aplikasi Flutter buat baca label gizi kemasan dan taksir gizi makanan dari foto.
 - Lanjut di Telegram: tautkan akun sekali, terus chat bot-nya tanpa buka aplikasi.
 - Diary harian, laporan mingguan (bisa export PDF), profil keluarga + alergi.
 - Prediksi risiko kesehatan dari pola 30 hari, kuis nutrisi, bandingkan produk.
+
+## Quick Start
+
+Butuh Flutter channel stable dengan Dart `^3.12.1` (cek `pubspec.yaml` kalau ragu).
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
+
+Build rilis:
+
+```bash
+flutter build apk --release
+```
 
 ## Struktur folder
 
