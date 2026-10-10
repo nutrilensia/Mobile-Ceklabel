@@ -590,6 +590,25 @@ class ApiService {
     }
   }
 
+  // ── Telegram ────────────────────────────────────────────────────────────
+
+  Future<String> getTelegramLinkCode() async {
+    try {
+      final res = await _dio.post(
+        '$baseUrl/api/telegram/link-code',
+        options: _authHeader(),
+      );
+      final data = res.data['data'] as Map<String, dynamic>?;
+      final deepLink = data?['deepLink']?.toString();
+      if (deepLink == null || deepLink.isEmpty) {
+        throw ApiException('Link Telegram tidak tersedia.');
+      }
+      return deepLink;
+    } on DioException catch (e) {
+      throw ApiException(_parseError(e));
+    }
+  }
+
   // ── Error helper ──────────────────────────────────────────────────────────
 
   String _parseError(DioException e) {

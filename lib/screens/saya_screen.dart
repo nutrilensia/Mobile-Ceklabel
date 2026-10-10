@@ -72,16 +72,27 @@ class _SayaScreenState extends State<SayaScreen> {
     if (ok == true) await AuthService().logout();
   }
 
-  Future<void> _launchTelegramGeneral() async {
-    final Uri url = Uri.parse('https://t.me'); // Ganti dengan bot asli nanti
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) debugPrint('Gagal membuka Telegram');
-  }
-
-  Future<void> _launchTelegramWithParam(String? userId) async {
-    final String baseUrl = 'https://t.me'; // Ganti dengan bot asli nanti
-    final String urlString = userId != null ? '$baseUrl?start=$userId' : baseUrl;
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) debugPrint('Gagal membuka Telegram Param');
+  Future<void> _openTelegram() async {
+    String urlString = 'https://t.me/NutriLensiabot';
+    if (AuthService().isLoggedIn) {
+      try {
+        urlString = await ApiService().getTelegramLinkCode();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    final url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka Telegram')),
+      );
+    }
   }
 
   @override
@@ -150,12 +161,9 @@ class _SayaScreenState extends State<SayaScreen> {
               _buildMenuItem(
                 Icons.send_rounded,
                 'Hubungkan ke Telegram',
-                'Tautkan untuk menyimpan progress gizi dan sinkronisasi otomatis dengan Bot Lala',
+                'Chat Asisten Gizi di Telegram, tertaut ke akunmu',
                 const Color(0xFF0088CC),
-                () {
-                  final uid = AuthService().currentUser?.id;
-                  _launchTelegramWithParam(uid);
-                },
+                _openTelegram,
               ),
               _buildMenuItem(Icons.chat_bubble_outline_rounded, 'Asisten Gizi',
                   'Tanya AI soal nutrisi, pola makan & produk yang kamu scan', const Color(0xFF4ECDC4),
@@ -519,39 +527,6 @@ class _SayaScreenState extends State<SayaScreen> {
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15)),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _launchTelegramGeneral,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.cardBg(context), 
-                      foregroundColor: AppColors.textPrimary(context), 
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
-                      side: BorderSide(color: AppColors.cardBorder(context), width: 1), 
-                      elevation: 0, 
-                    ),
-                                        child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, 
-                      children: [
-                        const Icon(Icons.send_rounded, color: Color(0xFF0088CC), size: 20), 
-                        const SizedBox(width: 10), 
-                        Expanded(
-                          child: Text(
-                            'Coba Asisten Gizi via Telegram',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600, 
-                              fontSize: 14, 
-                            ),
-                            textAlign: TextAlign.center, 
-                            maxLines: 2, 
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -559,8 +534,6 @@ class _SayaScreenState extends State<SayaScreen> {
       ),
     );
   }
-
-  
 
   Widget _buildThemeSelector() {
     final themeProvider = context.watch<ThemeProvider>();
