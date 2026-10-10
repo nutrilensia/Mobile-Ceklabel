@@ -527,6 +527,39 @@ class _SayaScreenState extends State<SayaScreen> {
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15)),
                   ),
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _openTelegram,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cardBg(context),
+                      foregroundColor: AppColors.textPrimary(context),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      side: BorderSide(color: AppColors.cardBorder(context), width: 1),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.send_rounded, color: Color(0xFF0088CC), size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Coba Asisten Gizi via Telegram',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
