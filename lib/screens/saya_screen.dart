@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -71,6 +72,29 @@ class _SayaScreenState extends State<SayaScreen> {
     if (ok == true) await AuthService().logout();
   }
 
+  Future<void> _openTelegram() async {
+    String urlString = 'https://t.me/NutriLensiabot';
+    if (AuthService().isLoggedIn) {
+      try {
+        urlString = await ApiService().getTelegramLinkCode();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    final url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka Telegram')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -134,6 +158,13 @@ class _SayaScreenState extends State<SayaScreen> {
                   'Rata-rata asupan 7 hari & export PDF', const Color(0xFF6BCB77),
                   () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const WeeklyReportScreen()))),
+              _buildMenuItem(
+                Icons.send_rounded,
+                'Hubungkan ke Telegram',
+                'Chat Asisten Gizi di Telegram, tertaut ke akunmu',
+                const Color(0xFF0088CC),
+                _openTelegram,
+              ),
               _buildMenuItem(Icons.chat_bubble_outline_rounded, 'Asisten Gizi',
                   'Tanya AI soal nutrisi, pola makan & produk yang kamu scan', const Color(0xFF4ECDC4),
                   () => Navigator.push(context,
