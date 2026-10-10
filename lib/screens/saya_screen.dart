@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -71,6 +72,18 @@ class _SayaScreenState extends State<SayaScreen> {
     if (ok == true) await AuthService().logout();
   }
 
+  Future<void> _launchTelegramGeneral() async {
+    final Uri url = Uri.parse('https://t.me'); // Ganti dengan bot asli nanti
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) debugPrint('Gagal membuka Telegram');
+  }
+
+  Future<void> _launchTelegramWithParam(String? userId) async {
+    final String baseUrl = 'https://t.me'; // Ganti dengan bot asli nanti
+    final String urlString = userId != null ? '$baseUrl?start=$userId' : baseUrl;
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) debugPrint('Gagal membuka Telegram Param');
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -134,6 +147,16 @@ class _SayaScreenState extends State<SayaScreen> {
                   'Rata-rata asupan 7 hari & export PDF', const Color(0xFF6BCB77),
                   () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const WeeklyReportScreen()))),
+              _buildMenuItem(
+                Icons.send_rounded,
+                'Hubungkan ke Telegram',
+                'Tautkan untuk menyimpan progress gizi dan sinkronisasi otomatis dengan Bot Lala',
+                const Color(0xFF0088CC),
+                () {
+                  final uid = AuthService().currentUser?.id;
+                  _launchTelegramWithParam(uid);
+                },
+              ),
               _buildMenuItem(Icons.chat_bubble_outline_rounded, 'Asisten Gizi',
                   'Tanya AI soal nutrisi, pola makan & produk yang kamu scan', const Color(0xFF4ECDC4),
                   () => Navigator.push(context,
@@ -496,6 +519,39 @@ class _SayaScreenState extends State<SayaScreen> {
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15)),
                   ),
                 ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _launchTelegramGeneral,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cardBg(context), 
+                      foregroundColor: AppColors.textPrimary(context), 
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), 
+                      side: BorderSide(color: AppColors.cardBorder(context), width: 1), 
+                      elevation: 0, 
+                    ),
+                                        child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center, 
+                      children: [
+                        const Icon(Icons.send_rounded, color: Color(0xFF0088CC), size: 20), 
+                        const SizedBox(width: 10), 
+                        Expanded(
+                          child: Text(
+                            'Coba Asisten Gizi via Telegram',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600, 
+                              fontSize: 14, 
+                            ),
+                            textAlign: TextAlign.center, 
+                            maxLines: 2, 
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -503,6 +559,8 @@ class _SayaScreenState extends State<SayaScreen> {
       ),
     );
   }
+
+  
 
   Widget _buildThemeSelector() {
     final themeProvider = context.watch<ThemeProvider>();
