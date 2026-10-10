@@ -2,8 +2,6 @@
 
 Aplikasi Flutter buat baca label gizi kemasan dan taksir gizi makanan dari foto. Cekrek, langsung tahu Nutri-Score, gula, natrium, dan kawan-kawannya.
 
-Backend-nya ada di repo `Backend-Ceklabel` (`https://ceklabel-api.vercel.app`).
-
 ## Fitur
 
 - Scan tabel gizi kemasan, langsung dapat Nutri-Score + penjelasan.
