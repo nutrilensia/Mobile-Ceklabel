@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'compare_screen.dart';
 import '../widgets/handle_bar.dart';
 
-/// "Belanja Pintar" dari foto: ambil 2-3 foto label produk langsung,
+/// "Belanja Pintar" dari foto: ambil 2-3 foto label produk atau makanan langsung,
 /// lalu bandingkan tanpa perlu produk ada di database.
 class PhotoCompareScreen extends StatefulWidget {
   const PhotoCompareScreen({super.key});
@@ -129,8 +129,8 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Foto 2-3 label produk yang ingin kamu bandingkan. '
-                            'Cocok saat memilih produk di rak minimarket.',
+                            'Foto 2-3 label produk atau makanan yang ingin kamu bandingkan. '
+                            'Cocok saat memilih produk di rak minimarket atau menu makanan.',
                             style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: const Color(0xFF4ECDC4),
