@@ -8,6 +8,8 @@ class NutriScoreBadge extends StatelessWidget {
   final String colorHex;
   final int finalScore;
   final bool animate;
+  final String? detectionType;
+  final Widget? detectionWidget;
 
   const NutriScoreBadge({
     super.key,
@@ -16,6 +18,8 @@ class NutriScoreBadge extends StatelessWidget {
     required this.colorHex,
     required this.finalScore,
     this.animate = true,
+    this.detectionType,
+    this.detectionWidget,
   });
 
   Color get _color {
@@ -129,8 +133,62 @@ class NutriScoreBadge extends StatelessWidget {
                 color: AppColors.textSecondary(context),
               ),
             ),
+            if (detectionWidget != null ||
+                (detectionType != null && detectionType!.isNotEmpty)) ...[
+              const SizedBox(height: 14),
+              Divider(
+                color: mainColor.withValues(alpha: 0.25),
+                height: 1,
+                thickness: 0.8,
+              ),
+              const SizedBox(height: 12),
+              detectionWidget ?? _buildDetectionBadge(),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetectionBadge() {
+    final isMakanan = detectionType == 'makanan_langsung' || detectionType == 'food';
+    final isKemasanDepan = detectionType == 'kemasan_depan' || detectionType == 'label-front';
+    final icon = isMakanan
+        ? Icons.fastfood_rounded
+        : isKemasanDepan
+            ? Icons.photo_rounded
+            : Icons.label_rounded;
+    final text = isMakanan
+        ? 'Terdeteksi: Foto Makanan'
+        : isKemasanDepan
+            ? 'Terdeteksi: Kemasan Depan (Estimasi)'
+            : 'Terdeteksi: Label Kemasan';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 13,
+            color: const Color(0xFF4ECDC4),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF4ECDC4),
+            ),
+          ),
+        ],
       ),
     );
   }
