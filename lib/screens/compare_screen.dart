@@ -80,8 +80,10 @@ class _CompareScreenState extends State<CompareScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        if (result.mixedSources) _buildMixedBanner(),
-        if (result.confidenceNote != null) _buildEstimateNote(result.confidenceNote!),
+        if (result.failed.isNotEmpty)
+          _buildFailedBanner(result)
+        else if (result.mixedSources || result.confidenceNote != null || result.estimateCount > 0)
+          _buildSourceBanner(result),
         if (result.recommendedName != null)
           _buildRecommendationCard(result),
         const SizedBox(height: 16),
@@ -94,22 +96,23 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildMixedBanner() {
+  Widget _buildFailedBanner(CompareResult result) {
+    final firstError = result.failed.first.error;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFCC00).withValues(alpha: 0.1),
+        color: const Color(0xFFEF8B2C).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFCC00).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFFEF8B2C).withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF9A7600)),
+          const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFEF8B2C)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Satuan beda — label per 100g, makanan per porsi. Pemenang dari NutriScore ternormalisasi.',
+              '${result.failed.length} foto tidak terbaca dan dilewati. $firstError',
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.textBody(context), height: 1.4),
             ),
           ),
@@ -118,23 +121,48 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildEstimateNote(String note) {
+  Widget _buildSourceBanner(CompareResult result) {
+    final lines = <String>[];
+    if (result.mixedSources) {
+      lines.add('Satuan beda — label per 100g, makanan per porsi. Pemenang dari NutriScore ternormalisasi.');
+    }
+    if (result.confidenceNote != null) {
+      lines.add(result.confidenceNote!);
+    } else if (result.estimateCount > 0) {
+      lines.add('Hasil mengandung estimasi AI, bukan hasil lab.');
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBg(context),
+        color: result.mixedSources
+            ? const Color(0xFFFFCC00).withValues(alpha: 0.1)
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder(context)),
+        border: Border.all(
+          color: result.mixedSources
+              ? const Color(0xFFFFCC00).withValues(alpha: 0.4)
+              : AppColors.cardBorder(context),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.auto_awesome_outlined, size: 18, color: Color(0xFF4ECDC4)),
+          Icon(
+            result.mixedSources ? Icons.info_outline_rounded : Icons.auto_awesome_outlined,
+            size: 18,
+            color: result.mixedSources ? const Color(0xFF9A7600) : const Color(0xFF4ECDC4),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              note,
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context), height: 1.4),
+              lines.join('\n'),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: result.mixedSources
+                    ? AppColors.textBody(context)
+                    : AppColors.textSecondary(context),
+                height: 1.4,
+              ),
             ),
           ),
         ],
