@@ -13,7 +13,7 @@ import '../models/live_scan_result.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
-import 'photo_compare_screen.dart';
+import 'compare_screen.dart';
 
 import '../widgets/app_logo.dart';
 import '../widgets/handle_bar.dart';
@@ -482,6 +482,10 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool _isTabVisible = true; // Track tab visibility
   String? _errorMessage;
 
+  // ── Mode Perbandingan Kamera (Compare Mode) ──
+  bool isComparingMode = false;
+  List<String> compareImagePaths = [];
+
   // ── Live AR Mode ──
   bool _liveMode = false;
   bool _liveIdle = false; // auto-paused after _liveIdleThreshold ticks of no detection
@@ -795,9 +799,8 @@ class _ScannerScreenState extends State<ScannerScreen>
       final image = await controller.takePicture();
       if (!mounted) return;
 
-      // Photo is captured — safe to show loading UI and let user move
+      // Photo is captured — safe to let user move
       if (mounted) setState(() => _isCapturing = false);
-      _setProcessing(true);
 
       // Restore torch mode after capture if flash was on
       if (_isFlashOn) {
@@ -806,6 +809,41 @@ class _ScannerScreenState extends State<ScannerScreen>
         } catch (_) {}
       }
 
+      // ── MODE PERBANDINGAN (In-App Camera Viewfinder) ──
+      if (isComparingMode) {
+        if (!mounted) return;
+        if (compareImagePaths.length >= 3) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚠️ Batas Maksimal: Anda hanya dapat membandingkan maksimal 3 produk/makanan sekaligus.'),
+              backgroundColor: Color(0xFFEF8B2C),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          compareImagePaths.add(image.path);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              compareImagePaths.length == 1
+                  ? 'Foto Produk 1 tersimpan! Sekarang ambil foto Produk 2.'
+                  : compareImagePaths.length == 2
+                      ? 'Foto Produk 2 tersimpan! Siap dibandingkan (atau tambah foto ke-3).'
+                      : 'Foto Produk 3 tersimpan! Ketuk tombol ceklis (✅) untuk membandingkan.',
+            ),
+            backgroundColor: const Color(0xFF4ECDC4),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        return; // Tetap di kamera utama, jangan lakukan navigasi terlebih dahulu!
+      }
+
+      _setProcessing(true);
       await _sendToApi(File(image.path));
     } catch (e) {
       if (mounted) setState(() => _isCapturing = false);
@@ -823,6 +861,35 @@ class _ScannerScreenState extends State<ScannerScreen>
       );
       if (image == null) return;
       if (!mounted) return;
+      if (isComparingMode) {
+        if (compareImagePaths.length >= 3) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚠️ Batas Maksimal: Anda hanya dapat membandingkan maksimal 3 produk/makanan sekaligus.'),
+              backgroundColor: Color(0xFFEF8B2C),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+        setState(() {
+          compareImagePaths.add(image.path);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              compareImagePaths.length == 1
+                  ? 'Foto Produk 1 tersimpan dari galeri! Ambil foto Produk 2.'
+                  : compareImagePaths.length == 2
+                      ? 'Foto Produk 2 tersimpan dari galeri! Siap dibandingkan (atau tambah foto ke-3).'
+                      : 'Foto Produk 3 tersimpan dari galeri! Ketuk tombol ceklis (✅) untuk membandingkan.',
+            ),
+            backgroundColor: const Color(0xFF4ECDC4),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
       _setProcessing(true);
       await _sendToApi(File(image.path));
     } catch (e) {
@@ -1046,7 +1113,8 @@ class _ScannerScreenState extends State<ScannerScreen>
 
           _buildTopBar(),
           _buildBottomControls(),
-          if (AuthService().isLoggedIn) _buildProfileSelector(),
+          if (AuthService().isLoggedIn && !isComparingMode) _buildProfileSelector(),
+          if (isComparingMode) _buildStackedFloatingThumbnails(),
 
           // Zoom indicator
           if (_isCameraInitialized && _currentZoom > _minZoom) _buildZoomIndicator(),
@@ -1428,10 +1496,11 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ),
 
-              // Zoom hint / placeholder for symmetry
+              // Tombol Bandingkan
               _buildControlButton(
-                icon: Icons.add_a_photo_rounded,
-                label: 'Bandingkan',
+                icon: isComparingMode ? Icons.compare_arrows_rounded : Icons.add_a_photo_rounded,
+                label: isComparingMode ? 'Batal' : 'Bandingkan',
+                isActive: isComparingMode,
                 onTap: _openCompare,
               ),
             ],
@@ -1442,10 +1511,21 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   void _openCompare() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PhotoCompareScreen()),
-    );
+    setState(() {
+      isComparingMode = !isComparingMode;
+      if (!isComparingMode) {
+        compareImagePaths.clear();
+      }
+    });
+    if (isComparingMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mode Perbandingan Aktif! Ambil foto produk 1 lalu foto produk 2.'),
+          backgroundColor: Color(0xFF4ECDC4),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _showTips() {
@@ -1507,6 +1587,7 @@ class _ScannerScreenState extends State<ScannerScreen>
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -1516,15 +1597,248 @@ class _ScannerScreenState extends State<ScannerScreen>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: isActive
+                  ? const Color(0xFF4ECDC4).withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.4),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.inputBorder(context)),
+              border: Border.all(
+                color: isActive ? const Color(0xFF4ECDC4) : AppColors.inputBorder(context),
+                width: isActive ? 2 : 1,
+              ),
             ),
-            child: Icon(icon, color: AppColors.textPrimary(context), size: 24),
+            child: Icon(
+              icon,
+              color: isActive ? const Color(0xFF4ECDC4) : AppColors.textPrimary(context),
+              size: 24,
+            ),
           ),
           const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary(context))),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              color: isActive ? const Color(0xFF4ECDC4) : AppColors.textSecondary(context),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStackedFloatingThumbnails() {
+    final bool canCompare = compareImagePaths.length >= 2;
+
+    return Positioned(
+      bottom: 125,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Status petunjuk perbandingan
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.4)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                compareImagePaths.isEmpty
+                    ? 'Mode Bandingkan: Jepret Foto Produk 1'
+                    : compareImagePaths.length == 1
+                        ? 'Jepret Foto Produk 2 (min. 2 foto)'
+                        : compareImagePaths.length == 2
+                            ? 'Siap (2/3) — Ketuk ✅ atau jepret foto ke-3'
+                            : 'Batas tercapai (3/3) — Ketuk ✅',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF4ECDC4),
+                ),
+              ),
+            ),
+
+            // Dua tombol aksi melayang kecil tepat di atas tumpukan foto
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Tombol Silang (❌): warna latar merah transparan, reset/batal
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      compareImagePaths.clear();
+                      isComparingMode = false;
+                    });
+                  },
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.6),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 28),
+                // Tombol Ceklis (✅): disabled/tidak bisa diklik jika belum minimal 2 foto
+                GestureDetector(
+                  onTap: canCompare
+                      ? () {
+                          final photos = compareImagePaths.map((p) => File(p)).toList();
+                          setState(() {
+                            isComparingMode = false;
+                            compareImagePaths.clear();
+                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CompareScreen(
+                                photos: photos,
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: canCompare
+                          ? const Color(0xFF2D8B35) // hijau mantap saat aktif
+                          : Colors.white.withValues(alpha: 0.15), // disabled saat < 2 foto
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: canCompare
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.white.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
+                      boxShadow: canCompare
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF2D8B35).withValues(alpha: 0.5),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: canCompare
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.35),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Tumpukan foto bulat melayang (BoxShape.circle diameter 55 overlapping, maks 3 foto)
+            SizedBox(
+              width: 125,
+              height: 55,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Foto ke-1
+                  Positioned(
+                    left: 0,
+                    child: _buildCircleThumbnail(
+                      index: 0,
+                      label: '1',
+                    ),
+                  ),
+                  // Foto ke-2 (menumpuk sebagian di atas foto ke-1)
+                  Positioned(
+                    left: 35,
+                    child: _buildCircleThumbnail(
+                      index: 1,
+                      label: '2',
+                    ),
+                  ),
+                  // Foto ke-3 (menumpuk sebagian di atas foto ke-2)
+                  Positioned(
+                    left: 70,
+                    child: _buildCircleThumbnail(
+                      index: 2,
+                      label: '3',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleThumbnail({required int index, required String label}) {
+    final hasPhoto = compareImagePaths.length > index;
+    return Container(
+      width: 55,
+      height: 55,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withValues(alpha: 0.6),
+        border: Border.all(
+          color: hasPhoto ? const Color(0xFF4ECDC4) : Colors.white.withValues(alpha: 0.6),
+          width: 2.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: hasPhoto
+            ? Image.file(
+                File(compareImagePaths[index]),
+                width: 55,
+                height: 55,
+                fit: BoxFit.cover,
+              )
+            : Center(
+                child: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
       ),
     );
   }

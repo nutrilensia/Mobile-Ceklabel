@@ -11,7 +11,9 @@ class CompareScreen extends StatefulWidget {
 
   final List<File>? photos;
 
-  const CompareScreen({super.key, this.items, this.photos});
+  final List<String>? photoPaths;
+
+  const CompareScreen({super.key, this.items, this.photos, this.photoPaths});
 
   @override
   State<CompareScreen> createState() => _CompareScreenState();
@@ -27,8 +29,9 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Future<CompareResult> _run() {
-    if (widget.photos != null) {
-      return ApiService().compareByPhotos(widget.photos!);
+    final photoList = widget.photos ?? widget.photoPaths?.map((p) => File(p)).toList();
+    if (photoList != null && photoList.isNotEmpty) {
+      return ApiService().compareByPhotos(photoList);
     }
     return ApiService().compareProducts(widget.items ?? []);
   }
@@ -77,8 +80,10 @@ class _CompareScreenState extends State<CompareScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        if (result.mixedSources) _buildMixedBanner(),
-        if (result.confidenceNote != null) _buildEstimateNote(result.confidenceNote!),
+        if (result.failed.isNotEmpty)
+          _buildFailedBanner(result)
+        else if (result.mixedSources || result.confidenceNote != null || result.estimateCount > 0)
+          _buildSourceBanner(result),
         if (result.recommendedName != null)
           _buildRecommendationCard(result),
         const SizedBox(height: 16),
@@ -91,22 +96,23 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildMixedBanner() {
+  Widget _buildFailedBanner(CompareResult result) {
+    final firstError = result.failed.first.error;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFCC00).withValues(alpha: 0.1),
+        color: const Color(0xFFEF8B2C).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFCC00).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFFEF8B2C).withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF9A7600)),
+          const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFEF8B2C)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Satuan beda — label per 100g, makanan per porsi. Pemenang dari NutriScore ternormalisasi.',
+              '${result.failed.length} foto tidak terbaca dan dilewati. $firstError',
               style: GoogleFonts.inter(fontSize: 12, color: AppColors.textBody(context), height: 1.4),
             ),
           ),
@@ -115,23 +121,48 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildEstimateNote(String note) {
+  Widget _buildSourceBanner(CompareResult result) {
+    final lines = <String>[];
+    if (result.mixedSources) {
+      lines.add('Satuan beda — label per 100g, makanan per porsi. Pemenang dari NutriScore ternormalisasi.');
+    }
+    if (result.confidenceNote != null) {
+      lines.add(result.confidenceNote!);
+    } else if (result.estimateCount > 0) {
+      lines.add('Hasil mengandung estimasi AI, bukan hasil lab.');
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBg(context),
+        color: result.mixedSources
+            ? const Color(0xFFFFCC00).withValues(alpha: 0.1)
+            : AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder(context)),
+        border: Border.all(
+          color: result.mixedSources
+              ? const Color(0xFFFFCC00).withValues(alpha: 0.4)
+              : AppColors.cardBorder(context),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.auto_awesome_outlined, size: 18, color: Color(0xFF4ECDC4)),
+          Icon(
+            result.mixedSources ? Icons.info_outline_rounded : Icons.auto_awesome_outlined,
+            size: 18,
+            color: result.mixedSources ? const Color(0xFF9A7600) : const Color(0xFF4ECDC4),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              note,
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context), height: 1.4),
+              lines.join('\n'),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: result.mixedSources
+                    ? AppColors.textBody(context)
+                    : AppColors.textSecondary(context),
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -383,10 +414,34 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
+  num _getNutrientVal(Map<String, dynamic> nutrition, String key) {
+    if (nutrition.containsKey(key)) {
+      final v = nutrition[key];
+      if (v is num) return v;
+      if (v != null) return num.tryParse(v.toString()) ?? 0;
+    }
+    const fallbacks = {
+      'calories': ['kalori', 'energy', 'energi'],
+      'fatTotalG': ['fat', 'fatTotal', 'totalFat', 'lemak', 'lemakTotal'],
+      'sugarG': ['sugar', 'sugars', 'totalSugar', 'gula'],
+      'sodiumMg': ['sodium', 'natrium'],
+      'proteinG': ['protein'],
+    };
+    for (final fb in fallbacks[key] ?? []) {
+      if (nutrition.containsKey(fb)) {
+        final v = nutrition[fb];
+        if (v is num) return v;
+        if (v != null) return num.tryParse(v.toString()) ?? 0;
+      }
+    }
+    return 0;
+  }
+
   Widget _buildNutrientRow(
     String key, String label, String unit, List<CompareProduct> products) {
-    final values = products.map((p) => (p.nutrition[key] ?? 0) as num).toList();
+    final values = products.map((p) => _getNutrientVal(p.nutrition, key)).toList();
     final minVal = values.fold(values.first, (a, b) => a < b ? a : b);
+    final maxVal = values.fold(values.first, (a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -405,7 +460,7 @@ class _CompareScreenState extends State<CompareScreen> {
           ...values.asMap().entries.map((e) {
             final val = e.value;
             final isEstimate = products[e.key].isEstimate;
-            final isBest = val == minVal && label != 'Protein';
+            final isBest = label == 'Protein' ? (val == maxVal && val > 0) : val == minVal;
             return Expanded(
               child: Text(
                 '${isEstimate ? '~' : ''}${val.round()} $unit',

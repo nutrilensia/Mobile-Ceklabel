@@ -131,6 +131,8 @@ class CompareProduct {
     this.confidence = 0.8,
   });
 
+  bool get isFood => isEstimate || source == 'food' || source == 'label-front';
+
   factory CompareProduct.fromJson(Map<String, dynamic> json) {
     final g = _Grade.parse(
       json['nutriScore'],
@@ -152,6 +154,20 @@ class CompareProduct {
   }
 }
 
+class CompareFailed {
+  final int index;
+  final String error;
+
+  const CompareFailed({required this.index, required this.error});
+
+  factory CompareFailed.fromJson(Map<String, dynamic> json) {
+    return CompareFailed(
+      index: (json['index'] ?? 0).toInt(),
+      error: json['error']?.toString() ?? 'Gagal membaca foto',
+    );
+  }
+}
+
 class CompareResult {
   final List<CompareProduct> products;
   final bool personalized;
@@ -162,6 +178,7 @@ class CompareResult {
   final bool mixedSources;
   final int estimateCount;
   final String? confidenceNote;
+  final List<CompareFailed> failed;
 
   CompareResult({
     required this.products,
@@ -173,6 +190,7 @@ class CompareResult {
     this.mixedSources = false,
     this.estimateCount = 0,
     this.confidenceNote,
+    this.failed = const [],
   });
 
   factory CompareResult.fromJson(Map<String, dynamic> json) {
@@ -192,6 +210,9 @@ class CompareResult {
       mixedSources: data['mixedSources'] ?? false,
       estimateCount: (data['estimateCount'] ?? 0).toInt(),
       confidenceNote: data['confidenceNote']?.toString(),
+      failed: (data['failed'] as List? ?? [])
+          .map((f) => CompareFailed.fromJson(f as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
