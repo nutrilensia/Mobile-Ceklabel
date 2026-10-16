@@ -151,8 +151,8 @@ class NutriScoreBadge extends StatelessWidget {
   }
 
   Widget _buildDetectionBadge() {
-    final isMakanan = detectionType == 'makanan_langsung';
-    final isKemasanDepan = detectionType == 'kemasan_depan';
+    final isMakanan = detectionType == 'makanan_langsung' || detectionType == 'food';
+    final isKemasanDepan = detectionType == 'kemasan_depan' || detectionType == 'label-front';
     final icon = isMakanan
         ? Icons.fastfood_rounded
         : isKemasanDepan
