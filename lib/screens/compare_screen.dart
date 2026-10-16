@@ -7,10 +7,8 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 
 class CompareScreen extends StatefulWidget {
-  /// Bandingkan produk dari database/riwayat.
   final List<CompareItem>? items;
 
-  /// Atau bandingkan langsung dari 2-3 foto label.
   final List<File>? photos;
 
   const CompareScreen({super.key, this.items, this.photos});
@@ -79,6 +77,8 @@ class _CompareScreenState extends State<CompareScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        if (result.mixedSources) _buildMixedBanner(),
+        if (result.confidenceNote != null) _buildEstimateNote(result.confidenceNote!),
         if (result.recommendedName != null)
           _buildRecommendationCard(result),
         const SizedBox(height: 16),
@@ -88,6 +88,54 @@ class _CompareScreenState extends State<CompareScreen> {
         const SizedBox(height: 16),
         _buildNutritionTable(result.products),
       ],
+    );
+  }
+
+  Widget _buildMixedBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFCC00).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFCC00).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF9A7600)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Satuan beda — label per 100g, makanan per porsi. Pemenang dari NutriScore ternormalisasi.',
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textBody(context), height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEstimateNote(String note) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardBorder(context)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome_outlined, size: 18, color: Color(0xFF4ECDC4)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              note,
+              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context), height: 1.4),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -207,12 +255,33 @@ class _CompareScreenState extends State<CompareScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Produk $label',
-                  style: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Produk $label',
+                      style: GoogleFonts.inter(
+                        fontSize: 11, fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    if (p.isEstimate) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFCC00).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '~Estimasi',
+                          style: GoogleFonts.inter(
+                            fontSize: 9, fontWeight: FontWeight.w600,
+                            color: const Color(0xFF9A7600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 Text(
                   p.name,
@@ -223,7 +292,9 @@ class _CompareScreenState extends State<CompareScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'Skor: ${p.finalScore} (makin rendah makin sehat)',
+                  p.servingSize.isNotEmpty
+                      ? '${p.servingSize} • Skor: ${p.finalScore}'
+                      : 'Skor: ${p.finalScore} (makin rendah makin sehat)',
                   style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary(context)),
                 ),
               ],
@@ -333,10 +404,11 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           ...values.asMap().entries.map((e) {
             final val = e.value;
+            final isEstimate = products[e.key].isEstimate;
             final isBest = val == minVal && label != 'Protein';
             return Expanded(
               child: Text(
-                '${val.round()} $unit',
+                '${isEstimate ? '~' : ''}${val.round()} $unit',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 13,
