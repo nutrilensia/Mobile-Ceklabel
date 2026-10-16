@@ -11,7 +11,9 @@ class CompareScreen extends StatefulWidget {
 
   final List<File>? photos;
 
-  const CompareScreen({super.key, this.items, this.photos});
+  final List<String>? photoPaths;
+
+  const CompareScreen({super.key, this.items, this.photos, this.photoPaths});
 
   @override
   State<CompareScreen> createState() => _CompareScreenState();
@@ -27,8 +29,9 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Future<CompareResult> _run() {
-    if (widget.photos != null) {
-      return ApiService().compareByPhotos(widget.photos!);
+    final photoList = widget.photos ?? widget.photoPaths?.map((p) => File(p)).toList();
+    if (photoList != null && photoList.isNotEmpty) {
+      return ApiService().compareByPhotos(photoList);
     }
     return ApiService().compareProducts(widget.items ?? []);
   }
@@ -383,10 +386,34 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
+  num _getNutrientVal(Map<String, dynamic> nutrition, String key) {
+    if (nutrition.containsKey(key)) {
+      final v = nutrition[key];
+      if (v is num) return v;
+      if (v != null) return num.tryParse(v.toString()) ?? 0;
+    }
+    const fallbacks = {
+      'calories': ['kalori', 'energy', 'energi'],
+      'fatTotalG': ['fat', 'fatTotal', 'totalFat', 'lemak', 'lemakTotal'],
+      'sugarG': ['sugar', 'sugars', 'totalSugar', 'gula'],
+      'sodiumMg': ['sodium', 'natrium'],
+      'proteinG': ['protein'],
+    };
+    for (final fb in fallbacks[key] ?? []) {
+      if (nutrition.containsKey(fb)) {
+        final v = nutrition[fb];
+        if (v is num) return v;
+        if (v != null) return num.tryParse(v.toString()) ?? 0;
+      }
+    }
+    return 0;
+  }
+
   Widget _buildNutrientRow(
     String key, String label, String unit, List<CompareProduct> products) {
-    final values = products.map((p) => (p.nutrition[key] ?? 0) as num).toList();
+    final values = products.map((p) => _getNutrientVal(p.nutrition, key)).toList();
     final minVal = values.fold(values.first, (a, b) => a < b ? a : b);
+    final maxVal = values.fold(values.first, (a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -405,7 +432,7 @@ class _CompareScreenState extends State<CompareScreen> {
           ...values.asMap().entries.map((e) {
             final val = e.value;
             final isEstimate = products[e.key].isEstimate;
-            final isBest = val == minVal && label != 'Protein';
+            final isBest = label == 'Protein' ? (val == maxVal && val > 0) : val == minVal;
             return Expanded(
               child: Text(
                 '${isEstimate ? '~' : ''}${val.round()} $unit',

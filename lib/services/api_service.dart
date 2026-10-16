@@ -437,11 +437,26 @@ class ApiService {
   /// Bandingkan 2-3 foto label langsung — tiap foto di-scan AI di server.
   Future<CompareResult> compareByPhotos(List<File> photos) async {
     try {
+      final tempDir = await getTemporaryDirectory();
       final form = FormData();
-      for (final f in photos) {
+      for (var i = 0; i < photos.length; i++) {
+        var fileToUpload = photos[i];
+        try {
+          final outPath = p.join(tempDir.path, 'compare_compressed_$i.jpg');
+          final compressed = await FlutterImageCompress.compressAndGetFile(
+            photos[i].path,
+            outPath,
+            minWidth: 1080,
+            minHeight: 1,
+            quality: 80,
+          );
+          if (compressed != null) fileToUpload = File(compressed.path);
+        } catch (_) {
+          // Fallback to original on compression failure
+        }
         form.files.add(MapEntry(
           'photos',
-          await MultipartFile.fromFile(f.path, filename: 'photo.jpg'),
+          await MultipartFile.fromFile(fileToUpload.path, filename: 'photo.jpg'),
         ));
       }
       final res = await _dio.post(

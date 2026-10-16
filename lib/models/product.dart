@@ -131,6 +131,8 @@ class CompareProduct {
     this.confidence = 0.8,
   });
 
+  bool get isFood => isEstimate || source == 'food' || source == 'label-front';
+
   factory CompareProduct.fromJson(Map<String, dynamic> json) {
     final g = _Grade.parse(
       json['nutriScore'],
