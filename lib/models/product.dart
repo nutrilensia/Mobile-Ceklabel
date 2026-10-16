@@ -112,6 +112,9 @@ class CompareProduct {
   final int finalScore;
   final Map<String, dynamic> nutrition;
   final bool isRecommended;
+  final String? detectionType;
+  final String? source;
+  final bool isEstimate;
 
   CompareProduct({
     required this.ref,
@@ -121,13 +124,31 @@ class CompareProduct {
     required this.finalScore,
     required this.nutrition,
     required this.isRecommended,
+    this.detectionType,
+    this.source,
+    this.isEstimate = false,
   });
+
+  bool get isFood =>
+      isEstimate ||
+      source == 'food' ||
+      source == 'makanan' ||
+      detectionType == 'makanan_langsung' ||
+      detectionType == 'kemasan_depan';
 
   factory CompareProduct.fromJson(Map<String, dynamic> json) {
     final g = _Grade.parse(
       json['nutriScore'],
       colorFallback: json['nutriScoreColor']?.toString(),
     );
+    final source = json['source']?.toString();
+    final detectionType = json['detectionType']?.toString();
+    final isEst = json['isEstimate'] == true ||
+        json['isFood'] == true ||
+        source == 'food' ||
+        source == 'makanan' ||
+        detectionType == 'makanan_langsung';
+
     return CompareProduct(
       ref: json['ref']?.toString() ?? '',
       name: json['productName']?.toString() ?? json['name']?.toString() ?? '',
@@ -136,6 +157,9 @@ class CompareProduct {
       finalScore: g.finalScore == 0 ? (json['finalScore'] ?? 0).toInt() : g.finalScore,
       nutrition: Map<String, dynamic>.from(json['nutrition'] ?? {}),
       isRecommended: json['isRecommended'] ?? false,
+      detectionType: detectionType,
+      source: source,
+      isEstimate: isEst,
     );
   }
 }
@@ -147,6 +171,7 @@ class CompareResult {
   final String? recommendedName;
   final List<String> reasons;
   final GamificationUpdate? gamification;
+  final String? comparisonType;
 
   CompareResult({
     required this.products,
@@ -155,6 +180,7 @@ class CompareResult {
     this.recommendedName,
     this.reasons = const [],
     this.gamification,
+    this.comparisonType,
   });
 
   factory CompareResult.fromJson(Map<String, dynamic> json) {
@@ -171,6 +197,7 @@ class CompareResult {
       gamification: data['gamification'] != null
           ? GamificationUpdate.fromJson(data['gamification'] as Map<String, dynamic>)
           : null,
+      comparisonType: data['comparisonType']?.toString() ?? data['type']?.toString(),
     );
   }
 }

@@ -129,8 +129,8 @@ class _PhotoCompareScreenState extends State<PhotoCompareScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Foto 2-3 label produk yang ingin kamu bandingkan. '
-                            'Cocok saat memilih produk di rak minimarket.',
+                            'Foto 2-3 makanan atau label produk yang ingin kamu bandingkan. '
+                            'Fitur ini sangat cocok saat kamu memilih menu diet atau membandingkan camilan sehat di rak minimarket.',
                             style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: const Color(0xFF4ECDC4),

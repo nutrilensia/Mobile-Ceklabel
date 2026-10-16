@@ -125,7 +125,15 @@ class _ResultScreenState extends State<ResultScreen> {
                   colorHex: r.nutriScore.color,
                   finalScore: r.nutriScore.finalScore,
                 ),
-                const SizedBox(height: 24),
+                if (r.detectionType != null && r.detectionType!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _buildDetectionBadge(),
+                  const SizedBox(height: 8),
+                ] else ...[
+                  const SizedBox(height: 12),
+                ],
+                _buildAiWarningBanner(),
+                const SizedBox(height: 12),
 
                 _buildExplanation(),
                 const SizedBox(height: 24),
@@ -193,82 +201,41 @@ class _ResultScreenState extends State<ResultScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _nutriColor.withValues(alpha: 0.2)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          if (r.detectionType != null && r.detectionType!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    r.detectionType == 'makanan_langsung'
-                        ? Icons.fastfood_rounded
-                        : r.detectionType == 'kemasan_depan'
-                            ? Icons.photo_rounded
-                            : Icons.label_rounded,
-                    size: 13,
-                    color: const Color(0xFF4ECDC4),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    r.detectionType == 'makanan_langsung'
-                        ? 'Terdeteksi: Foto Makanan'
-                        : r.detectionType == 'kemasan_depan'
-                            ? 'Terdeteksi: Kemasan Depan (Estimasi)'
-                            : 'Terdeteksi: Label Kemasan',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF4ECDC4)),
-                  ),
-                ],
-              ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _nutriColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
             ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: _nutriColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.inventory_2_rounded, color: _nutriColor, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Icon(Icons.inventory_2_rounded, color: _nutriColor, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(r.productName,
+                    style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary(context),
+                        height: 1.3)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    Text(r.productName,
-                        style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary(context),
-                            height: 1.3)),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _chip(r.servingSize, AppColors.cardBorder(context), AppColors.textSecondary(context)),
-                        if (r.category.isNotEmpty)
-                          _chip(_capitalize(r.category),
-                              const Color(0xFFAD7BFF).withValues(alpha: 0.12),
-                              const Color(0xFFAD7BFF)),
-                      ],
-                    ),
+                    _chip(r.servingSize, AppColors.cardBorder(context), AppColors.textSecondary(context)),
+                    if (r.category.isNotEmpty)
+                      _chip(_capitalize(r.category),
+                          const Color(0xFFAD7BFF).withValues(alpha: 0.12),
+                          const Color(0xFFAD7BFF)),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -592,6 +559,99 @@ class _ResultScreenState extends State<ResultScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildDetectionBadge() {
+    final r = widget.result;
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4ECDC4).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF4ECDC4).withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              r.detectionType == 'makanan_langsung'
+                  ? Icons.fastfood_rounded
+                  : r.detectionType == 'kemasan_depan'
+                      ? Icons.photo_rounded
+                      : Icons.label_rounded,
+              size: 13,
+              color: const Color(0xFF4ECDC4),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              r.detectionType == 'makanan_langsung'
+                  ? 'Terdeteksi: Foto Makanan'
+                  : r.detectionType == 'kemasan_depan'
+                      ? 'Terdeteksi: Kemasan Depan (Estimasi)'
+                      : 'Terdeteksi: Label Kemasan',
+              style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF4ECDC4)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiWarningBanner() {
+    final r = widget.result;
+    final isMakananLangsung = r.detectionType == 'makanan_langsung' ||
+        r.detectionType == 'kemasan_depan' ||
+        (r.sumberEstimasi != null && r.sumberEstimasi!.isNotEmpty);
+    final isDark = AppColors.isDark(context);
+
+    if (isMakananLangsung) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF0088CC), width: 1),
+        ),
+        child: Text(
+          'Hasil ini merupakan analisa dari AI karna tidak ada label gizi/hasil mungkin tidak akurat. tidak ada label gizi yg terdeteksi ai menganalisis ini semua (bisa jadi tidak valid)',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0088CC),
+            height: 1.4,
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.35) : Colors.black.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          'LABEL GIZI TERDETEKSI - Hasil diambil berdasarkan pemindaian nilai gizi otentik kemasan produk.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+            height: 1.4,
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildNotes() {

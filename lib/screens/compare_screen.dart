@@ -13,7 +13,10 @@ class CompareScreen extends StatefulWidget {
   /// Atau bandingkan langsung dari 2-3 foto label.
   final List<File>? photos;
 
-  const CompareScreen({super.key, this.items, this.photos});
+  /// Atau lemparan list path foto string dari kamera scanner.
+  final List<String>? photoPaths;
+
+  const CompareScreen({super.key, this.items, this.photos, this.photoPaths});
 
   @override
   State<CompareScreen> createState() => _CompareScreenState();
@@ -29,8 +32,9 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Future<CompareResult> _run() {
-    if (widget.photos != null) {
-      return ApiService().compareByPhotos(widget.photos!);
+    final photoList = widget.photos ?? widget.photoPaths?.map((p) => File(p)).toList();
+    if (photoList != null && photoList.isNotEmpty) {
+      return ApiService().compareByPhotos(photoList);
     }
     return ApiService().compareProducts(widget.items ?? []);
   }
@@ -86,6 +90,8 @@ class _CompareScreenState extends State<CompareScreen> {
           (e) => _buildProductCard(e.value, index: e.key),
         ),
         const SizedBox(height: 16),
+        _buildComparisonAlertBanner(result),
+        const SizedBox(height: 12),
         _buildNutritionTable(result.products),
       ],
     );
@@ -250,6 +256,88 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
+  Widget _buildComparisonAlertBanner(CompareResult result) {
+    final products = result.products;
+    if (products.isEmpty) return const SizedBox.shrink();
+
+    final foodCount = products.where((p) => p.isFood).length;
+    final total = products.length;
+
+    final isDark = AppColors.isDark(context);
+
+    final compType = result.comparisonType?.toLowerCase();
+    final bool isAllFood = compType == 'food_food' || compType == 'food' || foodCount == total;
+    final bool isMixed = compType == 'mixed' || (foodCount > 0 && foodCount < total);
+
+    if (isAllFood) {
+      // Makanan vs Makanan: Kotak Biru
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF0088CC), width: 1),
+        ),
+        child: Text(
+          '⚠️ ESTIMASI AI: Kedua hasil komparasi gizi ini murni merupakan analisa estimasi dari AI karena tidak ada label gizi kemasan resmi.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0088CC),
+            height: 1.4,
+          ),
+        ),
+      );
+    } else if (isMixed) {
+      // Campuran Makanan vs Label: Kotak Orange
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF9800).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFF9800), width: 1),
+        ),
+        child: Text(
+          '⚠️ PERBANDINGAN CAMPURAN: Anda sedang membandingkan data otentik label kemasan produk dengan hasil estimasi analitik AI makanan langsung. Hasil komparasi nilai gizi mungkin tidak seimbang.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
+            height: 1.4,
+          ),
+        ),
+      );
+    } else {
+      // Label vs Label: Kotak Putih tipis
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.35) : Colors.black.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          '✓ DATA OTENTIK: Perbandingan akurat berdasarkan pemindaian tabel informasi nilai gizi kedua kemasan produk.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+            height: 1.4,
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildNutritionTable(List<CompareProduct> products) {
     if (products.isEmpty) return const SizedBox();
     const nutrients = [
@@ -287,10 +375,11 @@ class _CompareScreenState extends State<CompareScreen> {
               children: [
                 const SizedBox(width: 70),
                 ...List.generate(products.length, (i) {
-                  final letters = ['A', 'B', 'C'];
+                  final letters = ['A', 'B', 'C', 'D'];
+                  final letter = i < letters.length ? letters[i] : '${i + 1}';
                   return Expanded(
                     child: Text(
-                      'Produk ${letters[i]}',
+                      'Produk $letter',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
                         fontSize: 11,
@@ -312,10 +401,34 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
+  num _getNutrientVal(Map<String, dynamic> nutrition, String key) {
+    if (nutrition.containsKey(key)) {
+      final v = nutrition[key];
+      if (v is num) return v;
+      if (v != null) return num.tryParse(v.toString()) ?? 0;
+    }
+    const fallbacks = {
+      'calories': ['kalori', 'energy', 'energi'],
+      'fatTotalG': ['fat', 'fatTotal', 'totalFat', 'lemak', 'lemakTotal'],
+      'sugarG': ['sugar', 'sugars', 'totalSugar', 'gula'],
+      'sodiumMg': ['sodium', 'natrium'],
+      'proteinG': ['protein'],
+    };
+    for (final fb in fallbacks[key] ?? []) {
+      if (nutrition.containsKey(fb)) {
+        final v = nutrition[fb];
+        if (v is num) return v;
+        if (v != null) return num.tryParse(v.toString()) ?? 0;
+      }
+    }
+    return 0;
+  }
+
   Widget _buildNutrientRow(
     String key, String label, String unit, List<CompareProduct> products) {
-    final values = products.map((p) => (p.nutrition[key] ?? 0) as num).toList();
+    final values = products.map((p) => _getNutrientVal(p.nutrition, key)).toList();
     final minVal = values.fold(values.first, (a, b) => a < b ? a : b);
+    final maxVal = values.fold(values.first, (a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -333,7 +446,7 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           ...values.asMap().entries.map((e) {
             final val = e.value;
-            final isBest = val == minVal && label != 'Protein';
+            final isBest = label == 'Protein' ? (val == maxVal && val > 0) : val == minVal;
             return Expanded(
               child: Text(
                 '${val.round()} $unit',
