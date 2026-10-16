@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import 'scanner_screen.dart';
 import 'diary_screen.dart';
 import 'explore_screen.dart';
@@ -53,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
               SayaScreen(key: ValueKey('saya_$_sayaKey')),
             ],
           ),
-          floatingActionButton: showChatFab ? _buildChatFab(context) : null,
+          floatingActionButton: showChatFab ? _buildFloatingActionButtons(context) : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           bottomNavigationBar: _buildNavBar(),
         );
@@ -61,8 +63,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildFloatingActionButtons(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildTelegramFab(context),
+        const SizedBox(height: 12),
+        _buildChatFab(context),
+      ],
+    );
+  }
+
+  Widget _buildTelegramFab(BuildContext context) {
+    return FloatingActionButton.small(
+      heroTag: 'fab_telegram',
+      onPressed: () => _openTelegram(context),
+      backgroundColor: const Color(0xFF26A5E4),
+      foregroundColor: Colors.white,
+      elevation: 4,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.send_rounded, size: 20, color: Colors.white),
+    );
+  }
+
   Widget _buildChatFab(BuildContext context) {
     return FloatingActionButton.extended(
+      heroTag: 'fab_chat',
       onPressed: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ChatScreen()),
@@ -71,11 +98,34 @@ class _HomeScreenState extends State<HomeScreen> {
       foregroundColor: Colors.white,
       elevation: 4,
       icon: const Icon(Icons.chat_bubble_rounded, size: 20),
-      label: Text(
+      label: const Text(
         'Tanya Gizi',
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
       ),
     );
+  }
+
+  Future<void> _openTelegram(BuildContext context) async {
+    String urlString = 'https://t.me/NutriLensiabot';
+    if (AuthService().isLoggedIn) {
+      try {
+        urlString = await ApiService().getTelegramLinkCode();
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    final url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka Telegram')),
+      );
+    }
   }
 
   Widget _buildNavBar() {
