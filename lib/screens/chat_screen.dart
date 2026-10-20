@@ -27,7 +27,14 @@ class _ChatScreenState extends State<ChatScreen> {
   // Surface/bg colors now from AppColors
   
 
-  static const _greeting = 'Halo! Saya Asisten Gizi NutriLensia. Saya bisa bantu kamu memahami label makanan, menganalisis pola makan, atau menjawab pertanyaan seputar nutrisi. Ada yang ingin kamu tanyakan?';
+  static const _greetings = [
+    'Halo, aku Lala, asisten gizimu di NutriLensia. Ada label makanan atau pola makan yang mau kita bedah hari ini?',
+    'Hei, Lala di sini. Tanya apa saja soal makananmu, nanti aku bantu hitung dan kasih saran yang pas.',
+    'Senang kamu di sini. Aku Lala, mau mulai dari mana, cek label baru atau lihat pola makannya?',
+  ];
+
+  static String _pickGreeting() =>
+      _greetings[DateTime.now().millisecondsSinceEpoch % _greetings.length];
 
   @override
   void initState() {
@@ -37,7 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (cached.isNotEmpty) {
       _messages.addAll(cached);
     } else {
-      _messages.add(ChatMessage(role: 'assistant', content: _greeting));
+      _messages.add(ChatMessage(role: 'assistant', content: _pickGreeting()));
       ApiService().chatHistory = List.from(_messages);
     }
   }
@@ -132,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Asisten Gizi', style: GoogleFonts.poppins(
+                Text('Lala', style: GoogleFonts.poppins(
                   fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                 )),
                 Text(
@@ -153,7 +160,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   _messages.clear();
                   _messages.add(ChatMessage(
                     role: 'assistant',
-                    content: 'Percakapan baru dimulai. Ada yang ingin kamu tanyakan?',
+                    content: 'Mulai baru ya. Tanya apa saja soal makanan, aku siap bantu.',
                   ));
                 });
                 _saveHistory();
