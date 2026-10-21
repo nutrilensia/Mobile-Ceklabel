@@ -139,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lala', style: GoogleFonts.poppins(
+                Text('Asisten Gizi', style: GoogleFonts.poppins(
                   fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context),
                 )),
                 Text(
